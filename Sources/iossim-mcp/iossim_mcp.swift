@@ -119,7 +119,7 @@ struct IOSSimMCP {
                 ),
                 Tool(
                     name: "tap",
-                    description: "Tap on an element in the app",
+                    description: "Tap on an element in the app. For multiple actions in sequence, use run_ui_script instead.",
                     inputSchema: .object([
                         "type": .string("object"),
                         "properties": .object([
@@ -145,7 +145,7 @@ struct IOSSimMCP {
                 ),
                 Tool(
                     name: "type_text",
-                    description: "Type text into an element or the focused field",
+                    description: "Type text into an element or the focused field. For multiple actions in sequence, use run_ui_script instead.",
                     inputSchema: .object([
                         "type": .string("object"),
                         "properties": .object([
@@ -171,7 +171,7 @@ struct IOSSimMCP {
                 ),
                 Tool(
                     name: "swipe",
-                    description: "Swipe in a direction on the screen or an element",
+                    description: "Swipe in a direction on the screen or an element. For multiple actions in sequence, use run_ui_script instead.",
                     inputSchema: .object([
                         "type": .string("object"),
                         "properties": .object([
@@ -197,7 +197,7 @@ struct IOSSimMCP {
                 ),
                 Tool(
                     name: "run_ui_script",
-                    description: "Run a sequence of UI actions on an app, optionally recording video",
+                    description: "Run a sequence of UI actions on an app. Supports multiple actions in one call with optional video recording. Preferred over individual tap/type_text/swipe calls when performing multiple actions.",
                     inputSchema: .object([
                         "type": .string("object"),
                         "properties": .object([
@@ -207,7 +207,7 @@ struct IOSSimMCP {
                             ]),
                             "actions": .object([
                                 "type": .string("array"),
-                                "description": .string("Array of actions to perform. Each action has 'type' and action-specific properties.")
+                                "description": .string("Array of actions to perform. Supported types: tap, typeText, swipe, longPress, waitForElement, assertExists, screenshot. Each action requires 'type' and a 'target' object with 'type' (identifier/label/coordinate) and 'value'.")
                             ]),
                             "simulatorUdid": .object([
                                 "type": .string("string"),
