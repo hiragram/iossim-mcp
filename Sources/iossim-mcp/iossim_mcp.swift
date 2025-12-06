@@ -207,7 +207,7 @@ struct IOSSimMCP {
                             ]),
                             "actions": .object([
                                 "type": .string("array"),
-                                "description": .string("Array of actions to perform. Supported types: tap, doubleTap, typeText, swipe, longPress, pinch, rotate, drag, scrollToElement, clearText, shake, waitForElement, assertExists, screenshot, getElementValue, getElementProperties, getElementFrame. Each action requires 'type' and a 'target' object with 'type' (identifier/label/coordinate) and 'value'.")
+                                "description": .string("Array of actions to perform. Supported types: tap, doubleTap, typeText, swipe, longPress, pinch, rotate, drag, scrollToElement, clearText, shake, waitForElement, assertExists, getElementValue, getElementProperties, getElementFrame. Each action requires 'type' and a 'target' object with 'type' (identifier/label/coordinate) and 'value'.")
                             ]),
                             "simulatorUdid": .object([
                                 "type": .string("string"),

@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(perl -e:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp add Sources/iossim-mcp/iossim_mcp.swift)",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp commit -m \"$(cat <<''EOF''\nSave screenshot to file instead of returning base64 data\n\nReturn file path instead of base64-encoded image data to reduce\ncontext size when using the take_screenshot tool.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp push)",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp add Sources/Core/UITestDriver.swift)",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp commit -m \"$(cat <<''EOF''\nFix xcodebuild creating build directory in working directory\n\nSpecify -derivedDataPath to temp directory to prevent xcodebuild\nfrom creating build artifacts in the caller''s working directory.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp diff a898d53..c3b65f2 -- Sources/)",
+      "Bash(xcrun simctl get_app_container:*)",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp add Sources/Core/SimulatorController.swift)",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp commit -m \"$(cat <<''EOF''\nImprove error messages with LocalizedError\n\nAdd LocalizedError conformance to SimulatorError to display\nactual stderr content in error messages for better debugging.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp add -A)",
+      "Bash(git -C /Users/hiragram/Development/iossim-mcp commit -m \"$(cat <<''EOF''\nRemove screenshot action from run_ui_script\n\nThe dedicated take_screenshot tool provides image compression and\nresizing, making the screenshot action in run_ui_script redundant.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

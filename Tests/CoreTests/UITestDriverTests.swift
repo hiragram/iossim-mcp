@@ -171,13 +171,12 @@ struct UITestDriverTests {
             #expect(result.videoPath == nil)
         }
 
-        @Test("Encodes and decodes ActionResult with screenshotPath")
+        @Test("Encodes and decodes ActionResult")
         func encodesAndDecodesActionResult() throws {
             let actionResult = UITestResult.ActionResult(
                 actionIndex: 0,
                 success: true,
-                error: nil,
-                screenshotPath: "/tmp/screenshot.png"
+                error: nil
             )
             let result = UITestResult(
                 success: true,
@@ -192,7 +191,6 @@ struct UITestDriverTests {
 
             #expect(decoded.results.count == 1)
             #expect(decoded.results[0].actionIndex == 0)
-            #expect(decoded.results[0].screenshotPath == "/tmp/screenshot.png")
             #expect(decoded.videoPath == "/tmp/video.mov")
         }
     }

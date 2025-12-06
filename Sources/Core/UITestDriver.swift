@@ -21,7 +21,6 @@ public enum UITestAction: Codable, Sendable {
     case longPress(target: ElementTarget, duration: Double?)
     case waitForElement(target: ElementTarget, timeout: Double?)
     case assertExists(target: ElementTarget)
-    case screenshot(outputPath: String?)
     case doubleTap(target: ElementTarget)
     case pinch(target: ElementTarget, scale: Double, velocity: Double)
     case rotate(target: ElementTarget, rotation: Double, velocity: Double)
@@ -40,7 +39,6 @@ public enum UITestAction: Codable, Sendable {
         case direction
         case duration
         case timeout
-        case outputPath
         case scale
         case velocity
         case rotation
@@ -77,9 +75,6 @@ public enum UITestAction: Codable, Sendable {
         case "assertExists":
             let target = try container.decode(ElementTarget.self, forKey: .target)
             self = .assertExists(target: target)
-        case "screenshot":
-            let outputPath = try container.decodeIfPresent(String.self, forKey: .outputPath)
-            self = .screenshot(outputPath: outputPath)
         case "doubleTap":
             let target = try container.decode(ElementTarget.self, forKey: .target)
             self = .doubleTap(target: target)
@@ -153,9 +148,6 @@ public enum UITestAction: Codable, Sendable {
         case .assertExists(let target):
             try container.encode("assertExists", forKey: .type)
             try container.encode(target, forKey: .target)
-        case .screenshot(let outputPath):
-            try container.encode("screenshot", forKey: .type)
-            try container.encodeIfPresent(outputPath, forKey: .outputPath)
         case .doubleTap(let target):
             try container.encode("doubleTap", forKey: .type)
             try container.encode(target, forKey: .target)
@@ -216,7 +208,6 @@ public struct UITestResult: Codable, Sendable {
         public let actionIndex: Int
         public let success: Bool
         public let error: String?
-        public let screenshotPath: String?
         public let value: String?
         public let properties: ElementProperties?
         public let frame: ElementFrame?
@@ -225,7 +216,6 @@ public struct UITestResult: Codable, Sendable {
             actionIndex: Int,
             success: Bool,
             error: String?,
-            screenshotPath: String?,
             value: String? = nil,
             properties: ElementProperties? = nil,
             frame: ElementFrame? = nil
@@ -233,7 +223,6 @@ public struct UITestResult: Codable, Sendable {
             self.actionIndex = actionIndex
             self.success = success
             self.error = error
-            self.screenshotPath = screenshotPath
             self.value = value
             self.properties = properties
             self.frame = frame
