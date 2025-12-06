@@ -196,4 +196,327 @@ struct UITestDriverTests {
             #expect(decoded.videoPath == "/tmp/video.mov")
         }
     }
+
+    @Suite("UITestAction")
+    struct UITestActionTests {
+
+        // MARK: - doubleTap
+
+        @Test("doubleTap action encodes correctly")
+        func doubleTapEncodesCorrectly() throws {
+            let action = UITestAction.doubleTap(target: .identifier("button"))
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"doubleTap\""))
+            #expect(json.contains("\"type\":\"identifier\""))
+            #expect(json.contains("\"value\":\"button\""))
+        }
+
+        @Test("doubleTap action decodes correctly")
+        func doubleTapDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "doubleTap",
+                "target": {
+                    "type": "identifier",
+                    "value": "zoomableImage"
+                }
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .doubleTap(let target) = action {
+                if case .identifier(let value) = target {
+                    #expect(value == "zoomableImage")
+                } else {
+                    Issue.record("Expected identifier target")
+                }
+            } else {
+                Issue.record("Expected doubleTap action")
+            }
+        }
+
+        // MARK: - pinch
+
+        @Test("pinch action encodes correctly")
+        func pinchEncodesCorrectly() throws {
+            let action = UITestAction.pinch(target: .identifier("image"), scale: 2.0, velocity: 1.0)
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"pinch\""))
+            #expect(json.contains("\"scale\":2"))
+            #expect(json.contains("\"velocity\":1"))
+        }
+
+        @Test("pinch action decodes correctly")
+        func pinchDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "pinch",
+                "target": {
+                    "type": "identifier",
+                    "value": "mapView"
+                },
+                "scale": 0.5,
+                "velocity": -1.0
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .pinch(let target, let scale, let velocity) = action {
+                if case .identifier(let value) = target {
+                    #expect(value == "mapView")
+                } else {
+                    Issue.record("Expected identifier target")
+                }
+                #expect(scale == 0.5)
+                #expect(velocity == -1.0)
+            } else {
+                Issue.record("Expected pinch action")
+            }
+        }
+
+        // MARK: - rotate
+
+        @Test("rotate action encodes correctly")
+        func rotateEncodesCorrectly() throws {
+            let action = UITestAction.rotate(target: .identifier("image"), rotation: 1.57, velocity: 0.5)
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"rotate\""))
+            #expect(json.contains("\"rotation\""))
+            #expect(json.contains("\"velocity\""))
+        }
+
+        @Test("rotate action decodes correctly")
+        func rotateDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "rotate",
+                "target": {
+                    "type": "identifier",
+                    "value": "dial"
+                },
+                "rotation": 3.14,
+                "velocity": 1.0
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .rotate(let target, let rotation, let velocity) = action {
+                if case .identifier(let value) = target {
+                    #expect(value == "dial")
+                } else {
+                    Issue.record("Expected identifier target")
+                }
+                #expect(rotation == 3.14)
+                #expect(velocity == 1.0)
+            } else {
+                Issue.record("Expected rotate action")
+            }
+        }
+
+        // MARK: - drag
+
+        @Test("drag action encodes correctly")
+        func dragEncodesCorrectly() throws {
+            let action = UITestAction.drag(
+                from: .coordinate(x: 100, y: 100),
+                to: .coordinate(x: 200, y: 200),
+                duration: 0.5
+            )
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"drag\""))
+            #expect(json.contains("\"from\""))
+            #expect(json.contains("\"to\""))
+            #expect(json.contains("\"duration\""))
+        }
+
+        @Test("drag action decodes correctly")
+        func dragDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "drag",
+                "from": {
+                    "type": "identifier",
+                    "value": "draggableItem"
+                },
+                "to": {
+                    "type": "identifier",
+                    "value": "dropZone"
+                },
+                "duration": 1.0
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .drag(let from, let to, let duration) = action {
+                if case .identifier(let fromValue) = from {
+                    #expect(fromValue == "draggableItem")
+                } else {
+                    Issue.record("Expected identifier for 'from' target")
+                }
+                if case .identifier(let toValue) = to {
+                    #expect(toValue == "dropZone")
+                } else {
+                    Issue.record("Expected identifier for 'to' target")
+                }
+                #expect(duration == 1.0)
+            } else {
+                Issue.record("Expected drag action")
+            }
+        }
+
+        // MARK: - scrollToElement
+
+        @Test("scrollToElement action encodes correctly")
+        func scrollToElementEncodesCorrectly() throws {
+            let action = UITestAction.scrollToElement(
+                target: .identifier("targetElement"),
+                within: .identifier("scrollView"),
+                direction: .down,
+                maxScrolls: 10
+            )
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"scrollToElement\""))
+            #expect(json.contains("\"target\""))
+            #expect(json.contains("\"within\""))
+            #expect(json.contains("\"direction\""))
+        }
+
+        @Test("scrollToElement action decodes correctly")
+        func scrollToElementDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "scrollToElement",
+                "target": {
+                    "type": "identifier",
+                    "value": "lastItem"
+                },
+                "within": {
+                    "type": "identifier",
+                    "value": "tableView"
+                },
+                "direction": "down",
+                "maxScrolls": 5
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .scrollToElement(let target, let within, let direction, let maxScrolls) = action {
+                if case .identifier(let targetValue) = target {
+                    #expect(targetValue == "lastItem")
+                } else {
+                    Issue.record("Expected identifier for target")
+                }
+                if case .identifier(let withinValue) = within {
+                    #expect(withinValue == "tableView")
+                } else {
+                    Issue.record("Expected identifier for within")
+                }
+                #expect(direction == .down)
+                #expect(maxScrolls == 5)
+            } else {
+                Issue.record("Expected scrollToElement action")
+            }
+        }
+
+        // MARK: - clearText
+
+        @Test("clearText action encodes correctly")
+        func clearTextEncodesCorrectly() throws {
+            let action = UITestAction.clearText(target: .identifier("textField"))
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"clearText\""))
+            #expect(json.contains("\"target\""))
+        }
+
+        @Test("clearText action decodes correctly")
+        func clearTextDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "clearText",
+                "target": {
+                    "type": "identifier",
+                    "value": "emailField"
+                }
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .clearText(let target) = action {
+                if case .identifier(let value) = target {
+                    #expect(value == "emailField")
+                } else {
+                    Issue.record("Expected identifier target")
+                }
+            } else {
+                Issue.record("Expected clearText action")
+            }
+        }
+
+        // MARK: - shake
+
+        @Test("shake action encodes correctly")
+        func shakeEncodesCorrectly() throws {
+            let action = UITestAction.shake
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"shake\""))
+        }
+
+        @Test("shake action decodes correctly")
+        func shakeDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "shake"
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .shake = action {
+                // Success
+            } else {
+                Issue.record("Expected shake action")
+            }
+        }
+    }
 }

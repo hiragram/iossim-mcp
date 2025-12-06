@@ -22,6 +22,13 @@ public enum UITestAction: Codable, Sendable {
     case waitForElement(target: ElementTarget, timeout: Double?)
     case assertExists(target: ElementTarget)
     case screenshot(outputPath: String?)
+    case doubleTap(target: ElementTarget)
+    case pinch(target: ElementTarget, scale: Double, velocity: Double)
+    case rotate(target: ElementTarget, rotation: Double, velocity: Double)
+    case drag(from: ElementTarget, to: ElementTarget, duration: Double?)
+    case scrollToElement(target: ElementTarget, within: ElementTarget?, direction: SwipeDirection, maxScrolls: Int?)
+    case clearText(target: ElementTarget)
+    case shake
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -31,6 +38,13 @@ public enum UITestAction: Codable, Sendable {
         case duration
         case timeout
         case outputPath
+        case scale
+        case velocity
+        case rotation
+        case from
+        case to
+        case within
+        case maxScrolls
     }
 
     public init(from decoder: Decoder) throws {
@@ -63,6 +77,35 @@ public enum UITestAction: Codable, Sendable {
         case "screenshot":
             let outputPath = try container.decodeIfPresent(String.self, forKey: .outputPath)
             self = .screenshot(outputPath: outputPath)
+        case "doubleTap":
+            let target = try container.decode(ElementTarget.self, forKey: .target)
+            self = .doubleTap(target: target)
+        case "pinch":
+            let target = try container.decode(ElementTarget.self, forKey: .target)
+            let scale = try container.decode(Double.self, forKey: .scale)
+            let velocity = try container.decode(Double.self, forKey: .velocity)
+            self = .pinch(target: target, scale: scale, velocity: velocity)
+        case "rotate":
+            let target = try container.decode(ElementTarget.self, forKey: .target)
+            let rotation = try container.decode(Double.self, forKey: .rotation)
+            let velocity = try container.decode(Double.self, forKey: .velocity)
+            self = .rotate(target: target, rotation: rotation, velocity: velocity)
+        case "drag":
+            let from = try container.decode(ElementTarget.self, forKey: .from)
+            let to = try container.decode(ElementTarget.self, forKey: .to)
+            let duration = try container.decodeIfPresent(Double.self, forKey: .duration)
+            self = .drag(from: from, to: to, duration: duration)
+        case "scrollToElement":
+            let target = try container.decode(ElementTarget.self, forKey: .target)
+            let within = try container.decodeIfPresent(ElementTarget.self, forKey: .within)
+            let direction = try container.decode(SwipeDirection.self, forKey: .direction)
+            let maxScrolls = try container.decodeIfPresent(Int.self, forKey: .maxScrolls)
+            self = .scrollToElement(target: target, within: within, direction: direction, maxScrolls: maxScrolls)
+        case "clearText":
+            let target = try container.decode(ElementTarget.self, forKey: .target)
+            self = .clearText(target: target)
+        case "shake":
+            self = .shake
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -101,6 +144,35 @@ public enum UITestAction: Codable, Sendable {
         case .screenshot(let outputPath):
             try container.encode("screenshot", forKey: .type)
             try container.encodeIfPresent(outputPath, forKey: .outputPath)
+        case .doubleTap(let target):
+            try container.encode("doubleTap", forKey: .type)
+            try container.encode(target, forKey: .target)
+        case .pinch(let target, let scale, let velocity):
+            try container.encode("pinch", forKey: .type)
+            try container.encode(target, forKey: .target)
+            try container.encode(scale, forKey: .scale)
+            try container.encode(velocity, forKey: .velocity)
+        case .rotate(let target, let rotation, let velocity):
+            try container.encode("rotate", forKey: .type)
+            try container.encode(target, forKey: .target)
+            try container.encode(rotation, forKey: .rotation)
+            try container.encode(velocity, forKey: .velocity)
+        case .drag(let from, let to, let duration):
+            try container.encode("drag", forKey: .type)
+            try container.encode(from, forKey: .from)
+            try container.encode(to, forKey: .to)
+            try container.encodeIfPresent(duration, forKey: .duration)
+        case .scrollToElement(let target, let within, let direction, let maxScrolls):
+            try container.encode("scrollToElement", forKey: .type)
+            try container.encode(target, forKey: .target)
+            try container.encodeIfPresent(within, forKey: .within)
+            try container.encode(direction, forKey: .direction)
+            try container.encodeIfPresent(maxScrolls, forKey: .maxScrolls)
+        case .clearText(let target):
+            try container.encode("clearText", forKey: .type)
+            try container.encode(target, forKey: .target)
+        case .shake:
+            try container.encode("shake", forKey: .type)
         }
     }
 }

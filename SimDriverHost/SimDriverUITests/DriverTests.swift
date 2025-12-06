@@ -15,6 +15,13 @@ enum Action: Codable {
     case waitForElement(WaitForElementAction)
     case assertExists(AssertExistsAction)
     case screenshot(ScreenshotAction)
+    case doubleTap(DoubleTapAction)
+    case pinch(PinchAction)
+    case rotate(RotateAction)
+    case drag(DragAction)
+    case scrollToElement(ScrollToElementAction)
+    case clearText(ClearTextAction)
+    case shake(ShakeAction)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -39,6 +46,20 @@ enum Action: Codable {
             self = .assertExists(try AssertExistsAction(from: decoder))
         case "screenshot":
             self = .screenshot(try ScreenshotAction(from: decoder))
+        case "doubleTap":
+            self = .doubleTap(try DoubleTapAction(from: decoder))
+        case "pinch":
+            self = .pinch(try PinchAction(from: decoder))
+        case "rotate":
+            self = .rotate(try RotateAction(from: decoder))
+        case "drag":
+            self = .drag(try DragAction(from: decoder))
+        case "scrollToElement":
+            self = .scrollToElement(try ScrollToElementAction(from: decoder))
+        case "clearText":
+            self = .clearText(try ClearTextAction(from: decoder))
+        case "shake":
+            self = .shake(try ShakeAction(from: decoder))
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -63,6 +84,20 @@ enum Action: Codable {
         case .assertExists(let action):
             try action.encode(to: encoder)
         case .screenshot(let action):
+            try action.encode(to: encoder)
+        case .doubleTap(let action):
+            try action.encode(to: encoder)
+        case .pinch(let action):
+            try action.encode(to: encoder)
+        case .rotate(let action):
+            try action.encode(to: encoder)
+        case .drag(let action):
+            try action.encode(to: encoder)
+        case .scrollToElement(let action):
+            try action.encode(to: encoder)
+        case .clearText(let action):
+            try action.encode(to: encoder)
+        case .shake(let action):
             try action.encode(to: encoder)
         }
     }
@@ -141,6 +176,49 @@ struct AssertExistsAction: Codable {
 struct ScreenshotAction: Codable {
     let type: String
     let outputPath: String?
+}
+
+struct DoubleTapAction: Codable {
+    let type: String
+    let target: ElementTarget
+}
+
+struct PinchAction: Codable {
+    let type: String
+    let target: ElementTarget
+    let scale: Double
+    let velocity: Double
+}
+
+struct RotateAction: Codable {
+    let type: String
+    let target: ElementTarget
+    let rotation: Double
+    let velocity: Double
+}
+
+struct DragAction: Codable {
+    let type: String
+    let from: ElementTarget
+    let to: ElementTarget
+    let duration: Double?
+}
+
+struct ScrollToElementAction: Codable {
+    let type: String
+    let target: ElementTarget
+    let within: ElementTarget?
+    let direction: String
+    let maxScrolls: Int?
+}
+
+struct ClearTextAction: Codable {
+    let type: String
+    let target: ElementTarget
+}
+
+struct ShakeAction: Codable {
+    let type: String
 }
 
 // MARK: - Result Models
@@ -235,6 +313,20 @@ final class DriverTests: XCTestCase {
             case .screenshot(let screenshotAction):
                 let path = try executeScreenshot(screenshotAction)
                 return ActionResult(actionIndex: index, success: true, error: nil, screenshotPath: path)
+            case .doubleTap(let doubleTapAction):
+                try executeDoubleTap(doubleTapAction)
+            case .pinch(let pinchAction):
+                try executePinch(pinchAction)
+            case .rotate(let rotateAction):
+                try executeRotate(rotateAction)
+            case .drag(let dragAction):
+                try executeDrag(dragAction)
+            case .scrollToElement(let scrollAction):
+                try executeScrollToElement(scrollAction)
+            case .clearText(let clearTextAction):
+                try executeClearText(clearTextAction)
+            case .shake(_):
+                try executeShake()
             }
             return ActionResult(actionIndex: index, success: true, error: nil, screenshotPath: nil)
         } catch {
@@ -333,6 +425,145 @@ final class DriverTests: XCTestCase {
         }
         try screenshot.pngRepresentation.write(to: URL(fileURLWithPath: path))
         return path
+    }
+
+    private func executeDoubleTap(_ action: DoubleTapAction) throws {
+        if let coordinate = action.target.getCoordinate(in: app) {
+            coordinate.doubleTap()
+        } else if let element = action.target.findElement(in: app) {
+            guard element.waitForExistence(timeout: 5) else {
+                throw DriverError.elementNotFound(action.target)
+            }
+            element.doubleTap()
+        } else {
+            throw DriverError.invalidTarget(action.target)
+        }
+    }
+
+    private func executePinch(_ action: PinchAction) throws {
+        guard let element = action.target.findElement(in: app) else {
+            throw DriverError.invalidTarget(action.target)
+        }
+        guard element.waitForExistence(timeout: 5) else {
+            throw DriverError.elementNotFound(action.target)
+        }
+        element.pinch(withScale: action.scale, velocity: action.velocity)
+    }
+
+    private func executeRotate(_ action: RotateAction) throws {
+        guard let element = action.target.findElement(in: app) else {
+            throw DriverError.invalidTarget(action.target)
+        }
+        guard element.waitForExistence(timeout: 5) else {
+            throw DriverError.elementNotFound(action.target)
+        }
+        element.rotate(action.rotation, withVelocity: action.velocity)
+    }
+
+    private func executeDrag(_ action: DragAction) throws {
+        let duration = action.duration ?? 0.5
+
+        // Get source element or coordinate
+        let sourceElement: XCUIElement?
+        let sourceCoordinate: XCUICoordinate?
+
+        if let coord = action.from.getCoordinate(in: app) {
+            sourceElement = nil
+            sourceCoordinate = coord
+        } else if let element = action.from.findElement(in: app) {
+            guard element.waitForExistence(timeout: 5) else {
+                throw DriverError.elementNotFound(action.from)
+            }
+            sourceElement = element
+            sourceCoordinate = nil
+        } else {
+            throw DriverError.invalidTarget(action.from)
+        }
+
+        // Get destination element or coordinate
+        let destCoordinate: XCUICoordinate
+
+        if let coord = action.to.getCoordinate(in: app) {
+            destCoordinate = coord
+        } else if let element = action.to.findElement(in: app) {
+            guard element.waitForExistence(timeout: 5) else {
+                throw DriverError.elementNotFound(action.to)
+            }
+            destCoordinate = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        } else {
+            throw DriverError.invalidTarget(action.to)
+        }
+
+        // Perform drag
+        if let element = sourceElement {
+            element.press(forDuration: duration, thenDragTo: destCoordinate.referencedElement)
+        } else if let coord = sourceCoordinate {
+            coord.press(forDuration: duration, thenDragTo: destCoordinate)
+        }
+    }
+
+    private func executeScrollToElement(_ action: ScrollToElementAction) throws {
+        guard let targetElement = action.target.findElement(in: app) else {
+            throw DriverError.invalidTarget(action.target)
+        }
+
+        let scrollContainer: XCUIElement
+        if let within = action.within, let container = within.findElement(in: app) {
+            scrollContainer = container
+        } else {
+            scrollContainer = app
+        }
+
+        let maxScrolls = action.maxScrolls ?? 10
+
+        for _ in 0..<maxScrolls {
+            if targetElement.exists && targetElement.isHittable {
+                return // Found and hittable
+            }
+
+            switch action.direction.lowercased() {
+            case "up":
+                scrollContainer.swipeUp()
+            case "down":
+                scrollContainer.swipeDown()
+            case "left":
+                scrollContainer.swipeLeft()
+            case "right":
+                scrollContainer.swipeRight()
+            default:
+                throw DriverError.invalidSwipeDirection(action.direction)
+            }
+        }
+
+        // Final check
+        guard targetElement.exists else {
+            throw DriverError.elementNotFound(action.target)
+        }
+    }
+
+    private func executeClearText(_ action: ClearTextAction) throws {
+        guard let element = action.target.findElement(in: app) else {
+            throw DriverError.invalidTarget(action.target)
+        }
+        guard element.waitForExistence(timeout: 5) else {
+            throw DriverError.elementNotFound(action.target)
+        }
+
+        // Select all text and delete
+        element.tap()
+        if let value = element.value as? String, !value.isEmpty {
+            // Triple tap to select all (works for most text fields)
+            element.tap(withNumberOfTaps: 3, numberOfTouches: 1)
+            // Small delay to ensure selection
+            Thread.sleep(forTimeInterval: 0.1)
+            // Type delete key
+            element.typeText(XCUIKeyboardKey.delete.rawValue)
+        }
+    }
+
+    private func executeShake() throws {
+        // XCUIDevice shake is available through XCUIDevice.shared
+        XCUIDevice.shared.perform(NSSelectorFromString("shake"))
     }
 
     enum DriverError: LocalizedError {
