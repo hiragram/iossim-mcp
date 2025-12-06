@@ -7,7 +7,8 @@ struct IOSSimMCP {
     static func main() async throws {
         let server = Server(
             name: "iossim-mcp",
-            version: "0.1.0"
+            version: "0.1.0",
+            capabilities: Server.Capabilities(tools: .init())
         )
 
         let simulatorController = SimulatorController()

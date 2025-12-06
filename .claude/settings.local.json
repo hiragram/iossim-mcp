@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(perl -e:*)",
+      "Bash(git push)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
