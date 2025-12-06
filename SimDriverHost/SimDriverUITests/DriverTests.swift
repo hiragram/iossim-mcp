@@ -184,9 +184,13 @@ final class DriverTests: XCTestCase {
         let data = try Data(contentsOf: URL(fileURLWithPath: scriptPath))
         let script = try JSONDecoder().decode(Script.self, from: data)
 
-        // Launch app
+        // Activate app (or launch if not running)
         app = XCUIApplication(bundleIdentifier: script.bundleId)
-        app.launch()
+        if app.state == .runningForeground || app.state == .runningBackground {
+            app.activate()
+        } else {
+            app.launch()
+        }
 
         // Execute actions
         results = []
