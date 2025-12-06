@@ -197,7 +197,7 @@ struct IOSSimMCP {
                 ),
                 Tool(
                     name: "run_ui_script",
-                    description: "Run a sequence of UI actions on an app",
+                    description: "Run a sequence of UI actions on an app, optionally recording video",
                     inputSchema: .object([
                         "type": .string("object"),
                         "properties": .object([
@@ -212,6 +212,10 @@ struct IOSSimMCP {
                             "simulatorUdid": .object([
                                 "type": .string("string"),
                                 "description": .string("The UDID of the simulator (optional)")
+                            ]),
+                            "recordVideo": .object([
+                                "type": .string("boolean"),
+                                "description": .string("If true, record video of the UI actions. The video path will be returned in the result.")
                             ])
                         ]),
                         "required": .array([.string("bundleId"), .string("actions")])
@@ -420,6 +424,9 @@ struct IOSSimMCP {
                     return CallTool.Result(content: [.text("Error: No booted simulator found")], isError: true)
                 }
 
+                // Parse recordVideo option
+                let recordVideo = params.arguments?["recordVideo"]?.boolValue ?? false
+
                 // Parse actions from JSON
                 let actionsData = try JSONEncoder().encode(actionsValue)
                 let actions = try JSONDecoder().decode([UITestAction].self, from: actionsData)
@@ -429,7 +436,7 @@ struct IOSSimMCP {
                     runnerAppPath: runnerAppPath,
                     hostAppPath: hostAppPath
                 )
-                let script = UITestScript(bundleId: bundleId, actions: actions)
+                let script = UITestScript(bundleId: bundleId, actions: actions, recordVideo: recordVideo)
                 let result = try await driver.execute(script: script, simulatorUdid: simulatorUdid)
 
                 let resultJson = try JSONEncoder().encode(result)

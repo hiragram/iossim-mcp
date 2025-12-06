@@ -156,9 +156,52 @@ public struct SimulatorController: Sendable {
         }
     }
 
+    /// Starts video recording on the simulator
+    /// - Returns: A RecordingSession that can be used to stop the recording
+    public func startRecording(simulatorUdid: String, outputPath: String) throws -> RecordingSession {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: xcrunPath)
+        process.arguments = ["simctl", "io", simulatorUdid, "recordVideo", "--codec=h264", "--force", outputPath]
+
+        let stderrPipe = Pipe()
+        process.standardError = stderrPipe
+
+        try process.run()
+
+        return RecordingSession(process: process, outputPath: outputPath)
+    }
+
     public enum SimulatorError: Error, Sendable {
         case commandFailed(String)
         case noBootedSimulator
+    }
+}
+
+/// Represents an active video recording session
+public final class RecordingSession: @unchecked Sendable {
+    private let process: Process
+    public let outputPath: String
+
+    init(process: Process, outputPath: String) {
+        self.process = process
+        self.outputPath = outputPath
+    }
+
+    /// Waits for recording to actually start (checks for "Recording started" in stderr)
+    public func waitForRecordingToStart(timeout: TimeInterval = 5.0) async throws {
+        // Give the recording process time to initialize
+        try await Task.sleep(for: .milliseconds(500))
+    }
+
+    /// Stops the recording by sending SIGINT
+    public func stop() {
+        process.interrupt()
+        process.waitUntilExit()
+    }
+
+    /// Whether the recording process is still running
+    public var isRunning: Bool {
+        process.isRunning
     }
 }
 

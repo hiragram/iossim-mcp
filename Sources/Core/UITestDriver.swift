@@ -4,10 +4,12 @@ import Foundation
 public struct UITestScript: Codable, Sendable {
     public let bundleId: String
     public let actions: [UITestAction]
+    public let recordVideo: Bool
 
-    public init(bundleId: String, actions: [UITestAction]) {
+    public init(bundleId: String, actions: [UITestAction], recordVideo: Bool = false) {
         self.bundleId = bundleId
         self.actions = actions
+        self.recordVideo = recordVideo
     }
 }
 
@@ -108,6 +110,14 @@ public struct UITestResult: Codable, Sendable {
     public let success: Bool
     public let results: [ActionResult]
     public let error: String?
+    public let videoPath: String?
+
+    public init(success: Bool, results: [ActionResult], error: String?, videoPath: String? = nil) {
+        self.success = success
+        self.results = results
+        self.error = error
+        self.videoPath = videoPath
+    }
 
     public struct ActionResult: Codable, Sendable {
         public let actionIndex: Int
@@ -120,17 +130,20 @@ public struct UITestResult: Codable, Sendable {
 /// Executes UI tests using xcodebuild test-without-building
 public struct UITestDriver: Sendable {
     private let processRunner: ProcessRunner
+    private let simulatorController: SimulatorController
     private let xctestrunPath: URL
     private let runnerAppPath: URL
     private let hostAppPath: URL
 
     public init(
         processRunner: ProcessRunner = DefaultProcessRunner(),
+        simulatorController: SimulatorController = SimulatorController(),
         xctestrunPath: URL,
         runnerAppPath: URL,
         hostAppPath: URL
     ) {
         self.processRunner = processRunner
+        self.simulatorController = simulatorController
         self.xctestrunPath = xctestrunPath
         self.runnerAppPath = runnerAppPath
         self.hostAppPath = hostAppPath
@@ -175,7 +188,23 @@ public struct UITestDriver: Sendable {
             resultPath: resultPath.path
         )
 
+        // Start video recording if requested
+        var recordingSession: RecordingSession? = nil
+        var videoOutputPath: String? = nil
+
+        if script.recordVideo {
+            videoOutputPath = "/tmp/iossim-mcp-recording-\(sessionId).mov"
+            recordingSession = try simulatorController.startRecording(
+                simulatorUdid: simulatorUdid,
+                outputPath: videoOutputPath!
+            )
+            try await recordingSession?.waitForRecordingToStart()
+        }
+
         defer {
+            // Stop recording if active
+            recordingSession?.stop()
+            // Clean up temp directory (but not the video file which is in /tmp)
             try? FileManager.default.removeItem(at: tempDir)
         }
 
@@ -194,14 +223,24 @@ public struct UITestDriver: Sendable {
         // Read result if available
         if FileManager.default.fileExists(atPath: resultPath.path) {
             let resultData = try Data(contentsOf: resultPath)
-            return try JSONDecoder().decode(UITestResult.self, from: resultData)
+            var testResult = try JSONDecoder().decode(UITestResult.self, from: resultData)
+            // Add video path to result if recording was enabled
+            if script.recordVideo {
+                testResult = UITestResult(
+                    success: testResult.success,
+                    results: testResult.results,
+                    error: testResult.error,
+                    videoPath: videoOutputPath
+                )
+            }
+            return testResult
         }
 
         // If no result file, construct result from process output
         if result.success {
-            return UITestResult(success: true, results: [], error: nil)
+            return UITestResult(success: true, results: [], error: nil, videoPath: videoOutputPath)
         } else {
-            return UITestResult(success: false, results: [], error: result.stderr)
+            return UITestResult(success: false, results: [], error: result.stderr, videoPath: videoOutputPath)
         }
     }
 
