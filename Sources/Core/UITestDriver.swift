@@ -156,15 +156,7 @@ public struct UITestDriver: Sendable {
         try FileManager.default.copyItem(at: runnerAppPath, to: destRunnerPath)
         try FileManager.default.copyItem(at: hostAppPath, to: destHostAppPath)
 
-        // Create modified .xctestrun file with absolute paths
-        let modifiedXctestrunPath = tempDir.appendingPathComponent("SimDriverUITests.xctestrun")
-        try createModifiedXctestrun(
-            from: xctestrunPath,
-            to: modifiedXctestrunPath,
-            testRoot: tempDir.path
-        )
-
-        // Write script to temp file
+        // Write script to temp file first (needed for xctestrun)
         let scriptPath = tempDir.appendingPathComponent("script.json")
         let resultPath = tempDir.appendingPathComponent("result.json")
 
@@ -172,6 +164,16 @@ public struct UITestDriver: Sendable {
         encoder.outputFormatting = .prettyPrinted
         let scriptData = try encoder.encode(script)
         try scriptData.write(to: scriptPath)
+
+        // Create modified .xctestrun file with absolute paths and environment variables
+        let modifiedXctestrunPath = tempDir.appendingPathComponent("SimDriverUITests.xctestrun")
+        try createModifiedXctestrun(
+            from: xctestrunPath,
+            to: modifiedXctestrunPath,
+            testRoot: tempDir.path,
+            scriptPath: scriptPath.path,
+            resultPath: resultPath.path
+        )
 
         defer {
             try? FileManager.default.removeItem(at: tempDir)
@@ -186,10 +188,6 @@ public struct UITestDriver: Sendable {
                 "-xctestrun", modifiedXctestrunPath.path,
                 "-destination", "platform=iOS Simulator,id=\(simulatorUdid)",
                 "-only-testing:SimDriverUITests/DriverTests/testScript"
-            ],
-            environment: [
-                "UI_TEST_SCRIPT_PATH": scriptPath.path,
-                "UI_TEST_RESULT_PATH": resultPath.path
             ]
         )
 
@@ -211,10 +209,26 @@ public struct UITestDriver: Sendable {
     private func createModifiedXctestrun(
         from source: URL,
         to destination: URL,
-        testRoot: String
+        testRoot: String,
+        scriptPath: String,
+        resultPath: String
     ) throws {
         var content = try String(contentsOf: source, encoding: .utf8)
         content = content.replacingOccurrences(of: "__TESTROOT__", with: testRoot)
+
+        // Inject environment variables into TestingEnvironmentVariables
+        let envVarsToInject = """
+                        <key>UI_TEST_SCRIPT_PATH</key>
+                        <string>\(scriptPath)</string>
+                        <key>UI_TEST_RESULT_PATH</key>
+                        <string>\(resultPath)</string>
+        """
+
+        // Insert after <key>TestingEnvironmentVariables</key>\n\t\t\t\t\t<dict>
+        if let range = content.range(of: "<key>TestingEnvironmentVariables</key>\n\t\t\t\t\t<dict>\n") {
+            content.insert(contentsOf: envVarsToInject + "\n", at: range.upperBound)
+        }
+
         try content.write(to: destination, atomically: true, encoding: .utf8)
     }
 }

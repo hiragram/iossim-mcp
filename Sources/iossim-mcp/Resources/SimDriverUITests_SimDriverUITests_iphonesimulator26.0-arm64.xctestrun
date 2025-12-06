@@ -104,7 +104,7 @@
 					<key>IsXCTRunnerHostedTestBundle</key>
 					<true/>
 					<key>ParallelizationEnabled</key>
-					<true/>
+					<false/>
 					<key>PreferredScreenCaptureFormat</key>
 					<string>screenRecording</string>
 					<key>ProductModuleName</key>
