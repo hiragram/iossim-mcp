@@ -291,15 +291,16 @@ struct IOSSimMCP {
                     .appendingPathComponent("screenshot-\(UUID().uuidString).png")
                 try await simulatorController.takeScreenshot(simulatorUdid: simulatorUdid, outputPath: tempPath.path)
 
-                // Read the screenshot and encode as base64
-                let imageData = try Data(contentsOf: tempPath)
-                let base64String = imageData.base64EncodedString()
+                // Resize and compress the image to fit within 256KB
+                let imageProcessor = ImageProcessor(maxWidth: 500, maxFileSize: 256 * 1024)
+                let jpegData = try imageProcessor.processImage(at: tempPath)
+                let base64String = jpegData.base64EncodedString()
 
                 // Clean up temp file
                 try? FileManager.default.removeItem(at: tempPath)
 
                 return CallTool.Result(content: [
-                    .image(data: base64String, mimeType: "image/png", metadata: nil)
+                    .image(data: base64String, mimeType: "image/jpeg", metadata: nil)
                 ])
 
             case "tap":
