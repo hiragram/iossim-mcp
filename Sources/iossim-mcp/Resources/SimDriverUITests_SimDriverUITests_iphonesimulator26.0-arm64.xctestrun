@@ -72,6 +72,7 @@
 					<integer>600</integer>
 					<key>DependentProductPaths</key>
 					<array>
+						<string>__TESTROOT__/Debug-iphonesimulator/SimDriverHost.app</string>
 						<string>__TESTROOT__/Debug-iphonesimulator/SimDriverUITests-Runner.app</string>
 						<string>__TESTROOT__/Debug-iphonesimulator/SimDriverUITests-Runner.app/PlugIns/SimDriverUITests.xctest</string>
 					</array>
@@ -167,7 +168,7 @@
 						<string>__TESTROOT__/Debug-iphonesimulator</string>
 					</dict>
 					<key>UITargetAppPath</key>
-					<string>__UI_TARGET_APP_PATH__</string>
+					<string>__TESTROOT__/Debug-iphonesimulator/SimDriverHost.app</string>
 					<key>UITargetAppPerformanceAntipatternCheckerEnabled</key>
 					<true/>
 					<key>UserAttachmentLifetime</key>

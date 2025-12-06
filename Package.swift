@@ -19,7 +19,8 @@ let package = Package(
             ],
             resources: [
                 .copy("Resources/SimDriverUITests-Runner.app"),
-                .copy("Resources/SimDriverUITests_SimDriverUITests_iphonesimulator26.0-arm64.xctestrun")
+                .copy("Resources/SimDriverUITests_SimDriverUITests_iphonesimulator26.0-arm64.xctestrun"),
+                .copy("Resources/SimDriverHost.app")
             ]
         ),
         .target(

@@ -22,6 +22,10 @@ struct IOSSimMCP {
             forResource: "SimDriverUITests-Runner",
             withExtension: "app"
         )!
+        let hostAppPath = Bundle.module.url(
+            forResource: "SimDriverHost",
+            withExtension: "app"
+        )!
 
         // Register tool list handler
         await server.withMethodHandler(ListTools.self) { _ in
@@ -230,6 +234,8 @@ struct IOSSimMCP {
                     return CallTool.Result(content: [.text("Error: udid is required")], isError: true)
                 }
                 try await simulatorController.bootSimulator(udid: udid)
+                // Ensure host app is installed for UI testing
+                try await simulatorController.ensureHostAppInstalled(hostAppPath: hostAppPath, simulatorUdid: udid)
                 return CallTool.Result(content: [.text("Simulator \(udid) booted successfully")])
 
             case "shutdown_simulator":
@@ -251,6 +257,8 @@ struct IOSSimMCP {
                 } else {
                     return CallTool.Result(content: [.text("Error: No booted simulator found")], isError: true)
                 }
+                // Ensure host app is installed for UI testing
+                try await simulatorController.ensureHostAppInstalled(hostAppPath: hostAppPath, simulatorUdid: simulatorUdid)
                 try await simulatorController.launchApp(bundleId: bundleId, simulatorUdid: simulatorUdid)
                 return CallTool.Result(content: [.text("App \(bundleId) launched on \(simulatorUdid)")])
 
@@ -318,7 +326,8 @@ struct IOSSimMCP {
 
                 let driver = UITestDriver(
                     xctestrunPath: xctestrunPath,
-                    runnerAppPath: runnerAppPath
+                    runnerAppPath: runnerAppPath,
+                    hostAppPath: hostAppPath
                 )
                 let script = UITestScript(bundleId: bundleId, actions: [.tap(target: target)])
                 let result = try await driver.execute(script: script, simulatorUdid: simulatorUdid)
@@ -349,7 +358,8 @@ struct IOSSimMCP {
 
                 let driver = UITestDriver(
                     xctestrunPath: xctestrunPath,
-                    runnerAppPath: runnerAppPath
+                    runnerAppPath: runnerAppPath,
+                    hostAppPath: hostAppPath
                 )
                 let script = UITestScript(bundleId: bundleId, actions: [.typeText(text: text, target: target)])
                 let result = try await driver.execute(script: script, simulatorUdid: simulatorUdid)
@@ -381,7 +391,8 @@ struct IOSSimMCP {
 
                 let driver = UITestDriver(
                     xctestrunPath: xctestrunPath,
-                    runnerAppPath: runnerAppPath
+                    runnerAppPath: runnerAppPath,
+                    hostAppPath: hostAppPath
                 )
                 let script = UITestScript(bundleId: bundleId, actions: [.swipe(direction: direction, target: target)])
                 let result = try await driver.execute(script: script, simulatorUdid: simulatorUdid)
@@ -414,7 +425,8 @@ struct IOSSimMCP {
 
                 let driver = UITestDriver(
                     xctestrunPath: xctestrunPath,
-                    runnerAppPath: runnerAppPath
+                    runnerAppPath: runnerAppPath,
+                    hostAppPath: hostAppPath
                 )
                 let script = UITestScript(bundleId: bundleId, actions: actions)
                 let result = try await driver.execute(script: script, simulatorUdid: simulatorUdid)

@@ -126,6 +126,36 @@ public struct SimulatorController: Sendable {
         }
     }
 
+    /// Checks if an app is installed on the simulator
+    public func isAppInstalled(bundleId: String, simulatorUdid: String) async throws -> Bool {
+        let result = try await processRunner.run(
+            executable: xcrunPath,
+            arguments: ["simctl", "get_app_container", simulatorUdid, bundleId]
+        )
+        return result.success
+    }
+
+    /// Installs an app on the simulator
+    public func installApp(appPath: String, simulatorUdid: String) async throws {
+        let result = try await processRunner.run(
+            executable: xcrunPath,
+            arguments: ["simctl", "install", simulatorUdid, appPath]
+        )
+
+        guard result.success else {
+            throw SimulatorError.commandFailed(result.stderr)
+        }
+    }
+
+    /// Ensures the host app is installed on the simulator
+    public func ensureHostAppInstalled(hostAppPath: URL, simulatorUdid: String) async throws {
+        let hostBundleId = "app.hiragram.SimDriverHost"
+        let isInstalled = try await isAppInstalled(bundleId: hostBundleId, simulatorUdid: simulatorUdid)
+        if !isInstalled {
+            try await installApp(appPath: hostAppPath.path, simulatorUdid: simulatorUdid)
+        }
+    }
+
     public enum SimulatorError: Error, Sendable {
         case commandFailed(String)
         case noBootedSimulator
