@@ -10,35 +10,6 @@
 				<string>arm64</string>
 			</array>
 			<key>BuildableIdentifier</key>
-			<string>607E050F2EE3ACB600DBE508:primary</string>
-			<key>IncludeInReport</key>
-			<true/>
-			<key>IsStatic</key>
-			<false/>
-			<key>Name</key>
-			<string>SimDriverHost.app</string>
-			<key>ProductPaths</key>
-			<array>
-				<string>__TESTROOT__/Debug-iphonesimulator/SimDriverHost.app/SimDriverHost</string>
-			</array>
-			<key>SourceFiles</key>
-			<array>
-				<string>ContentView.swift</string>
-				<string>SimDriverHostApp.swift</string>
-			</array>
-			<key>SourceFilesCommonPathPrefix</key>
-			<string>/Users/hiragram/Development/iossim-mcp/SimDriverHost/SimDriverHost/</string>
-			<key>Toolchains</key>
-			<array>
-				<string>com.apple.dt.toolchain.XcodeDefault</string>
-			</array>
-		</dict>
-		<dict>
-			<key>Architectures</key>
-			<array>
-				<string>arm64</string>
-			</array>
-			<key>BuildableIdentifier</key>
 			<string>607E05212EE3ACD600DBE508:primary</string>
 			<key>IncludeInReport</key>
 			<true/>
@@ -89,7 +60,6 @@
 					<string>SimDriverHost.xcodeproj</string>
 					<key>BundleIdentifiersForCrashReportEmphasis</key>
 					<array>
-						<string>app.hiragram.SimDriverHost</string>
 						<string>app.hiragram.SimDriverUITests</string>
 					</array>
 					<key>ClangProfileDataDirectoryPath</key>
@@ -102,7 +72,6 @@
 					<integer>600</integer>
 					<key>DependentProductPaths</key>
 					<array>
-						<string>__TESTROOT__/Debug-iphonesimulator/SimDriverHost.app</string>
 						<string>__TESTROOT__/Debug-iphonesimulator/SimDriverUITests-Runner.app</string>
 						<string>__TESTROOT__/Debug-iphonesimulator/SimDriverUITests-Runner.app/PlugIns/SimDriverUITests.xctest</string>
 					</array>
@@ -197,8 +166,6 @@
 						<key>__XPC_DYLD_LIBRARY_PATH</key>
 						<string>__TESTROOT__/Debug-iphonesimulator</string>
 					</dict>
-					<key>UITargetAppPath</key>
-					<string>__TESTROOT__/Debug-iphonesimulator/SimDriverHost.app</string>
 					<key>UITargetAppPerformanceAntipatternCheckerEnabled</key>
 					<true/>
 					<key>UserAttachmentLifetime</key>
