@@ -166,6 +166,8 @@
 						<key>__XPC_DYLD_LIBRARY_PATH</key>
 						<string>__TESTROOT__/Debug-iphonesimulator</string>
 					</dict>
+					<key>UITargetAppPath</key>
+					<string>__UI_TARGET_APP_PATH__</string>
 					<key>UITargetAppPerformanceAntipatternCheckerEnabled</key>
 					<true/>
 					<key>UserAttachmentLifetime</key>

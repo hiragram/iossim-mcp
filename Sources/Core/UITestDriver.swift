@@ -151,12 +151,16 @@ public struct UITestDriver: Sendable {
         let destRunnerPath = testProductsDir.appendingPathComponent("SimDriverUITests-Runner.app")
         try FileManager.default.copyItem(at: runnerAppPath, to: destRunnerPath)
 
+        // Get the target app path from the simulator
+        let targetAppPath = try await getAppPath(bundleId: script.bundleId, simulatorUdid: simulatorUdid)
+
         // Create modified .xctestrun file with absolute paths
         let modifiedXctestrunPath = tempDir.appendingPathComponent("SimDriverUITests.xctestrun")
         try createModifiedXctestrun(
             from: xctestrunPath,
             to: modifiedXctestrunPath,
-            testRoot: tempDir.path
+            testRoot: tempDir.path,
+            targetAppPath: targetAppPath
         )
 
         // Write script to temp file
@@ -202,10 +206,40 @@ public struct UITestDriver: Sendable {
         }
     }
 
-    /// Creates a modified .xctestrun file with __TESTROOT__ replaced by actual path
-    private func createModifiedXctestrun(from source: URL, to destination: URL, testRoot: String) throws {
+    /// Creates a modified .xctestrun file with placeholders replaced by actual paths
+    private func createModifiedXctestrun(
+        from source: URL,
+        to destination: URL,
+        testRoot: String,
+        targetAppPath: String
+    ) throws {
         var content = try String(contentsOf: source, encoding: .utf8)
         content = content.replacingOccurrences(of: "__TESTROOT__", with: testRoot)
+        content = content.replacingOccurrences(of: "__UI_TARGET_APP_PATH__", with: targetAppPath)
         try content.write(to: destination, atomically: true, encoding: .utf8)
+    }
+
+    /// Gets the app container path for a bundle ID on a simulator
+    private func getAppPath(bundleId: String, simulatorUdid: String) async throws -> String {
+        let result = try await processRunner.run(
+            executable: "/usr/bin/xcrun",
+            arguments: ["simctl", "get_app_container", simulatorUdid, bundleId]
+        )
+        if result.success {
+            return result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            throw UITestDriverError.appNotFound(bundleId: bundleId)
+        }
+    }
+}
+
+public enum UITestDriverError: Error, LocalizedError {
+    case appNotFound(bundleId: String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .appNotFound(let bundleId):
+            return "App not found: \(bundleId). Make sure the app is installed on the simulator."
+        }
     }
 }
