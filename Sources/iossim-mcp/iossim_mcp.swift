@@ -207,7 +207,7 @@ struct IOSSimMCP {
                             ]),
                             "actions": .object([
                                 "type": .string("array"),
-                                "description": .string("Array of actions to perform. Supported types: tap, doubleTap, typeText, swipe, longPress, pinch, rotate, drag, scrollToElement, clearText, shake, waitForElement, assertExists, screenshot. Each action requires 'type' and a 'target' object with 'type' (identifier/label/coordinate) and 'value'.")
+                                "description": .string("Array of actions to perform. Supported types: tap, doubleTap, typeText, swipe, longPress, pinch, rotate, drag, scrollToElement, clearText, shake, waitForElement, assertExists, screenshot, getElementValue, getElementProperties, getElementFrame. Each action requires 'type' and a 'target' object with 'type' (identifier/label/coordinate) and 'value'.")
                             ]),
                             "simulatorUdid": .object([
                                 "type": .string("string"),
@@ -514,6 +514,84 @@ struct IOSSimMCP {
                 Tool(
                     name: "assert_exists",
                     description: "Assert that an element exists. For multiple actions in sequence, use run_ui_script instead.",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "bundleId": .object([
+                                "type": .string("string"),
+                                "description": .string("The bundle identifier of the target app")
+                            ]),
+                            "identifier": .object([
+                                "type": .string("string"),
+                                "description": .string("The accessibility identifier of the element")
+                            ]),
+                            "label": .object([
+                                "type": .string("string"),
+                                "description": .string("The label of the element (alternative to identifier)")
+                            ]),
+                            "simulatorUdid": .object([
+                                "type": .string("string"),
+                                "description": .string("The UDID of the simulator (optional)")
+                            ])
+                        ]),
+                        "required": .array([.string("bundleId")])
+                    ])
+                ),
+                Tool(
+                    name: "get_element_value",
+                    description: "Get the value/text of a UI element. Returns the element's value property (e.g., text field content) or label.",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "bundleId": .object([
+                                "type": .string("string"),
+                                "description": .string("The bundle identifier of the target app")
+                            ]),
+                            "identifier": .object([
+                                "type": .string("string"),
+                                "description": .string("The accessibility identifier of the element")
+                            ]),
+                            "label": .object([
+                                "type": .string("string"),
+                                "description": .string("The label of the element (alternative to identifier)")
+                            ]),
+                            "simulatorUdid": .object([
+                                "type": .string("string"),
+                                "description": .string("The UDID of the simulator (optional)")
+                            ])
+                        ]),
+                        "required": .array([.string("bundleId")])
+                    ])
+                ),
+                Tool(
+                    name: "get_element_properties",
+                    description: "Get all properties of a UI element including label, value, title, identifier, isEnabled, isSelected, and placeholderValue.",
+                    inputSchema: .object([
+                        "type": .string("object"),
+                        "properties": .object([
+                            "bundleId": .object([
+                                "type": .string("string"),
+                                "description": .string("The bundle identifier of the target app")
+                            ]),
+                            "identifier": .object([
+                                "type": .string("string"),
+                                "description": .string("The accessibility identifier of the element")
+                            ]),
+                            "label": .object([
+                                "type": .string("string"),
+                                "description": .string("The label of the element (alternative to identifier)")
+                            ]),
+                            "simulatorUdid": .object([
+                                "type": .string("string"),
+                                "description": .string("The UDID of the simulator (optional)")
+                            ])
+                        ]),
+                        "required": .array([.string("bundleId")])
+                    ])
+                ),
+                Tool(
+                    name: "get_element_frame",
+                    description: "Get the position and size (frame) of a UI element. Returns x, y, width, and height.",
                     inputSchema: .object([
                         "type": .string("object"),
                         "properties": .object([
@@ -1144,6 +1222,129 @@ struct IOSSimMCP {
                     return CallTool.Result(content: [.text("Element exists")])
                 } else {
                     return CallTool.Result(content: [.text("Assert exists failed: \(result.error ?? "Element does not exist")")], isError: true)
+                }
+
+            case "get_element_value":
+                guard let bundleId = params.arguments?["bundleId"]?.stringValue else {
+                    return CallTool.Result(content: [.text("Error: bundleId is required")], isError: true)
+                }
+                let simulatorUdid: String
+                if let udid = params.arguments?["simulatorUdid"]?.stringValue {
+                    simulatorUdid = udid
+                } else if let booted = try await simulatorController.getBootedSimulator() {
+                    simulatorUdid = booted.udid
+                } else {
+                    return CallTool.Result(content: [.text("Error: No booted simulator found")], isError: true)
+                }
+
+                let target: ElementTarget
+                if let identifier = params.arguments?["identifier"]?.stringValue {
+                    target = .identifier(identifier)
+                } else if let label = params.arguments?["label"]?.stringValue {
+                    target = .label(label)
+                } else {
+                    return CallTool.Result(content: [.text("Error: Either identifier or label is required")], isError: true)
+                }
+
+                let driver = UITestDriver(
+                    xctestrunPath: xctestrunPath,
+                    runnerAppPath: runnerAppPath,
+                    hostAppPath: hostAppPath
+                )
+                let script = UITestScript(bundleId: bundleId, actions: [.getElementValue(target: target)])
+                let result = try await driver.execute(script: script, simulatorUdid: simulatorUdid)
+
+                if result.success {
+                    let value = result.results.first?.value ?? "null"
+                    return CallTool.Result(content: [.text(value)])
+                } else {
+                    return CallTool.Result(content: [.text("Get element value failed: \(result.error ?? "Unknown error")")], isError: true)
+                }
+
+            case "get_element_properties":
+                guard let bundleId = params.arguments?["bundleId"]?.stringValue else {
+                    return CallTool.Result(content: [.text("Error: bundleId is required")], isError: true)
+                }
+                let simulatorUdid: String
+                if let udid = params.arguments?["simulatorUdid"]?.stringValue {
+                    simulatorUdid = udid
+                } else if let booted = try await simulatorController.getBootedSimulator() {
+                    simulatorUdid = booted.udid
+                } else {
+                    return CallTool.Result(content: [.text("Error: No booted simulator found")], isError: true)
+                }
+
+                let target: ElementTarget
+                if let identifier = params.arguments?["identifier"]?.stringValue {
+                    target = .identifier(identifier)
+                } else if let label = params.arguments?["label"]?.stringValue {
+                    target = .label(label)
+                } else {
+                    return CallTool.Result(content: [.text("Error: Either identifier or label is required")], isError: true)
+                }
+
+                let driver = UITestDriver(
+                    xctestrunPath: xctestrunPath,
+                    runnerAppPath: runnerAppPath,
+                    hostAppPath: hostAppPath
+                )
+                let script = UITestScript(bundleId: bundleId, actions: [.getElementProperties(target: target)])
+                let result = try await driver.execute(script: script, simulatorUdid: simulatorUdid)
+
+                if result.success {
+                    if let properties = result.results.first?.properties {
+                        let encoder = JSONEncoder()
+                        encoder.outputFormatting = .prettyPrinted
+                        let json = try encoder.encode(properties)
+                        return CallTool.Result(content: [.text(String(data: json, encoding: .utf8) ?? "{}")])
+                    } else {
+                        return CallTool.Result(content: [.text("{}")], isError: true)
+                    }
+                } else {
+                    return CallTool.Result(content: [.text("Get element properties failed: \(result.error ?? "Unknown error")")], isError: true)
+                }
+
+            case "get_element_frame":
+                guard let bundleId = params.arguments?["bundleId"]?.stringValue else {
+                    return CallTool.Result(content: [.text("Error: bundleId is required")], isError: true)
+                }
+                let simulatorUdid: String
+                if let udid = params.arguments?["simulatorUdid"]?.stringValue {
+                    simulatorUdid = udid
+                } else if let booted = try await simulatorController.getBootedSimulator() {
+                    simulatorUdid = booted.udid
+                } else {
+                    return CallTool.Result(content: [.text("Error: No booted simulator found")], isError: true)
+                }
+
+                let target: ElementTarget
+                if let identifier = params.arguments?["identifier"]?.stringValue {
+                    target = .identifier(identifier)
+                } else if let label = params.arguments?["label"]?.stringValue {
+                    target = .label(label)
+                } else {
+                    return CallTool.Result(content: [.text("Error: Either identifier or label is required")], isError: true)
+                }
+
+                let driver = UITestDriver(
+                    xctestrunPath: xctestrunPath,
+                    runnerAppPath: runnerAppPath,
+                    hostAppPath: hostAppPath
+                )
+                let script = UITestScript(bundleId: bundleId, actions: [.getElementFrame(target: target)])
+                let result = try await driver.execute(script: script, simulatorUdid: simulatorUdid)
+
+                if result.success {
+                    if let frame = result.results.first?.frame {
+                        let encoder = JSONEncoder()
+                        encoder.outputFormatting = .prettyPrinted
+                        let json = try encoder.encode(frame)
+                        return CallTool.Result(content: [.text(String(data: json, encoding: .utf8) ?? "{}")])
+                    } else {
+                        return CallTool.Result(content: [.text("{}")], isError: true)
+                    }
+                } else {
+                    return CallTool.Result(content: [.text("Get element frame failed: \(result.error ?? "Unknown error")")], isError: true)
                 }
 
             default:

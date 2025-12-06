@@ -518,5 +518,125 @@ struct UITestDriverTests {
                 Issue.record("Expected shake action")
             }
         }
+
+        // MARK: - getElementValue
+
+        @Test("getElementValue action encodes correctly")
+        func getElementValueEncodesCorrectly() throws {
+            let action = UITestAction.getElementValue(target: .identifier("textField"))
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"getElementValue\""))
+            #expect(json.contains("\"target\""))
+        }
+
+        @Test("getElementValue action decodes correctly")
+        func getElementValueDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "getElementValue",
+                "target": {
+                    "type": "identifier",
+                    "value": "usernameField"
+                }
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .getElementValue(let target) = action {
+                if case .identifier(let value) = target {
+                    #expect(value == "usernameField")
+                } else {
+                    Issue.record("Expected identifier target")
+                }
+            } else {
+                Issue.record("Expected getElementValue action")
+            }
+        }
+
+        // MARK: - getElementProperties
+
+        @Test("getElementProperties action encodes correctly")
+        func getElementPropertiesEncodesCorrectly() throws {
+            let action = UITestAction.getElementProperties(target: .identifier("button"))
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"getElementProperties\""))
+            #expect(json.contains("\"target\""))
+        }
+
+        @Test("getElementProperties action decodes correctly")
+        func getElementPropertiesDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "getElementProperties",
+                "target": {
+                    "type": "label",
+                    "value": "Submit"
+                }
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .getElementProperties(let target) = action {
+                if case .label(let value) = target {
+                    #expect(value == "Submit")
+                } else {
+                    Issue.record("Expected label target")
+                }
+            } else {
+                Issue.record("Expected getElementProperties action")
+            }
+        }
+
+        // MARK: - getElementFrame
+
+        @Test("getElementFrame action encodes correctly")
+        func getElementFrameEncodesCorrectly() throws {
+            let action = UITestAction.getElementFrame(target: .identifier("imageView"))
+
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(action)
+            let json = String(data: data, encoding: .utf8)!
+
+            #expect(json.contains("\"type\":\"getElementFrame\""))
+            #expect(json.contains("\"target\""))
+        }
+
+        @Test("getElementFrame action decodes correctly")
+        func getElementFrameDecodesCorrectly() throws {
+            let json = """
+            {
+                "type": "getElementFrame",
+                "target": {
+                    "type": "identifier",
+                    "value": "profileImage"
+                }
+            }
+            """
+
+            let data = json.data(using: .utf8)!
+            let action = try JSONDecoder().decode(UITestAction.self, from: data)
+
+            if case .getElementFrame(let target) = action {
+                if case .identifier(let value) = target {
+                    #expect(value == "profileImage")
+                } else {
+                    Issue.record("Expected identifier target")
+                }
+            } else {
+                Issue.record("Expected getElementFrame action")
+            }
+        }
     }
 }

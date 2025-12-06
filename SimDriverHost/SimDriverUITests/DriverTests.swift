@@ -22,6 +22,9 @@ enum Action: Codable {
     case scrollToElement(ScrollToElementAction)
     case clearText(ClearTextAction)
     case shake(ShakeAction)
+    case getElementValue(GetElementValueAction)
+    case getElementProperties(GetElementPropertiesAction)
+    case getElementFrame(GetElementFrameAction)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -60,6 +63,12 @@ enum Action: Codable {
             self = .clearText(try ClearTextAction(from: decoder))
         case "shake":
             self = .shake(try ShakeAction(from: decoder))
+        case "getElementValue":
+            self = .getElementValue(try GetElementValueAction(from: decoder))
+        case "getElementProperties":
+            self = .getElementProperties(try GetElementPropertiesAction(from: decoder))
+        case "getElementFrame":
+            self = .getElementFrame(try GetElementFrameAction(from: decoder))
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -98,6 +107,12 @@ enum Action: Codable {
         case .clearText(let action):
             try action.encode(to: encoder)
         case .shake(let action):
+            try action.encode(to: encoder)
+        case .getElementValue(let action):
+            try action.encode(to: encoder)
+        case .getElementProperties(let action):
+            try action.encode(to: encoder)
+        case .getElementFrame(let action):
             try action.encode(to: encoder)
         }
     }
@@ -221,6 +236,21 @@ struct ShakeAction: Codable {
     let type: String
 }
 
+struct GetElementValueAction: Codable {
+    let type: String
+    let target: ElementTarget
+}
+
+struct GetElementPropertiesAction: Codable {
+    let type: String
+    let target: ElementTarget
+}
+
+struct GetElementFrameAction: Codable {
+    let type: String
+    let target: ElementTarget
+}
+
 // MARK: - Result Models
 
 struct ScriptResult: Codable {
@@ -234,6 +264,44 @@ struct ActionResult: Codable {
     let success: Bool
     let error: String?
     let screenshotPath: String?
+    let value: String?
+    let properties: ElementProperties?
+    let frame: ElementFrame?
+
+    init(
+        actionIndex: Int,
+        success: Bool,
+        error: String?,
+        screenshotPath: String?,
+        value: String? = nil,
+        properties: ElementProperties? = nil,
+        frame: ElementFrame? = nil
+    ) {
+        self.actionIndex = actionIndex
+        self.success = success
+        self.error = error
+        self.screenshotPath = screenshotPath
+        self.value = value
+        self.properties = properties
+        self.frame = frame
+    }
+}
+
+struct ElementProperties: Codable {
+    let label: String?
+    let value: String?
+    let title: String?
+    let identifier: String?
+    let isEnabled: Bool
+    let isSelected: Bool
+    let placeholderValue: String?
+}
+
+struct ElementFrame: Codable {
+    let x: Double
+    let y: Double
+    let width: Double
+    let height: Double
 }
 
 // MARK: - Driver Tests
@@ -327,6 +395,15 @@ final class DriverTests: XCTestCase {
                 try executeClearText(clearTextAction)
             case .shake(_):
                 try executeShake()
+            case .getElementValue(let action):
+                let value = try executeGetElementValue(action)
+                return ActionResult(actionIndex: index, success: true, error: nil, screenshotPath: nil, value: value)
+            case .getElementProperties(let action):
+                let properties = try executeGetElementProperties(action)
+                return ActionResult(actionIndex: index, success: true, error: nil, screenshotPath: nil, properties: properties)
+            case .getElementFrame(let action):
+                let frame = try executeGetElementFrame(action)
+                return ActionResult(actionIndex: index, success: true, error: nil, screenshotPath: nil, frame: frame)
             }
             return ActionResult(actionIndex: index, success: true, error: nil, screenshotPath: nil)
         } catch {
@@ -564,6 +641,60 @@ final class DriverTests: XCTestCase {
     private func executeShake() throws {
         // XCUIDevice shake is available through XCUIDevice.shared
         XCUIDevice.shared.perform(NSSelectorFromString("shake"))
+    }
+
+    private func executeGetElementValue(_ action: GetElementValueAction) throws -> String? {
+        guard let element = action.target.findElement(in: app) else {
+            throw DriverError.invalidTarget(action.target)
+        }
+        guard element.waitForExistence(timeout: 5) else {
+            throw DriverError.elementNotFound(action.target)
+        }
+
+        // Try to get the value - could be String or other types
+        if let stringValue = element.value as? String {
+            return stringValue
+        } else if let value = element.value {
+            return String(describing: value)
+        }
+        // Fall back to label if no value
+        return element.label.isEmpty ? nil : element.label
+    }
+
+    private func executeGetElementProperties(_ action: GetElementPropertiesAction) throws -> ElementProperties {
+        guard let element = action.target.findElement(in: app) else {
+            throw DriverError.invalidTarget(action.target)
+        }
+        guard element.waitForExistence(timeout: 5) else {
+            throw DriverError.elementNotFound(action.target)
+        }
+
+        return ElementProperties(
+            label: element.label.isEmpty ? nil : element.label,
+            value: element.value as? String,
+            title: element.title.isEmpty ? nil : element.title,
+            identifier: element.identifier.isEmpty ? nil : element.identifier,
+            isEnabled: element.isEnabled,
+            isSelected: element.isSelected,
+            placeholderValue: element.placeholderValue
+        )
+    }
+
+    private func executeGetElementFrame(_ action: GetElementFrameAction) throws -> ElementFrame {
+        guard let element = action.target.findElement(in: app) else {
+            throw DriverError.invalidTarget(action.target)
+        }
+        guard element.waitForExistence(timeout: 5) else {
+            throw DriverError.elementNotFound(action.target)
+        }
+
+        let frame = element.frame
+        return ElementFrame(
+            x: Double(frame.origin.x),
+            y: Double(frame.origin.y),
+            width: Double(frame.size.width),
+            height: Double(frame.size.height)
+        )
     }
 
     enum DriverError: LocalizedError {

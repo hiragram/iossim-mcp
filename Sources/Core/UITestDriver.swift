@@ -29,6 +29,9 @@ public enum UITestAction: Codable, Sendable {
     case scrollToElement(target: ElementTarget, within: ElementTarget?, direction: SwipeDirection, maxScrolls: Int?)
     case clearText(target: ElementTarget)
     case shake
+    case getElementValue(target: ElementTarget)
+    case getElementProperties(target: ElementTarget)
+    case getElementFrame(target: ElementTarget)
 
     private enum CodingKeys: String, CodingKey {
         case type
@@ -106,6 +109,15 @@ public enum UITestAction: Codable, Sendable {
             self = .clearText(target: target)
         case "shake":
             self = .shake
+        case "getElementValue":
+            let target = try container.decode(ElementTarget.self, forKey: .target)
+            self = .getElementValue(target: target)
+        case "getElementProperties":
+            let target = try container.decode(ElementTarget.self, forKey: .target)
+            self = .getElementProperties(target: target)
+        case "getElementFrame":
+            let target = try container.decode(ElementTarget.self, forKey: .target)
+            self = .getElementFrame(target: target)
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -173,6 +185,15 @@ public enum UITestAction: Codable, Sendable {
             try container.encode(target, forKey: .target)
         case .shake:
             try container.encode("shake", forKey: .type)
+        case .getElementValue(let target):
+            try container.encode("getElementValue", forKey: .type)
+            try container.encode(target, forKey: .target)
+        case .getElementProperties(let target):
+            try container.encode("getElementProperties", forKey: .type)
+            try container.encode(target, forKey: .target)
+        case .getElementFrame(let target):
+            try container.encode("getElementFrame", forKey: .type)
+            try container.encode(target, forKey: .target)
         }
     }
 }
@@ -196,6 +217,71 @@ public struct UITestResult: Codable, Sendable {
         public let success: Bool
         public let error: String?
         public let screenshotPath: String?
+        public let value: String?
+        public let properties: ElementProperties?
+        public let frame: ElementFrame?
+
+        public init(
+            actionIndex: Int,
+            success: Bool,
+            error: String?,
+            screenshotPath: String?,
+            value: String? = nil,
+            properties: ElementProperties? = nil,
+            frame: ElementFrame? = nil
+        ) {
+            self.actionIndex = actionIndex
+            self.success = success
+            self.error = error
+            self.screenshotPath = screenshotPath
+            self.value = value
+            self.properties = properties
+            self.frame = frame
+        }
+    }
+}
+
+/// Properties of a UI element
+public struct ElementProperties: Codable, Sendable {
+    public let label: String?
+    public let value: String?
+    public let title: String?
+    public let identifier: String?
+    public let isEnabled: Bool
+    public let isSelected: Bool
+    public let placeholderValue: String?
+
+    public init(
+        label: String?,
+        value: String?,
+        title: String?,
+        identifier: String?,
+        isEnabled: Bool,
+        isSelected: Bool,
+        placeholderValue: String?
+    ) {
+        self.label = label
+        self.value = value
+        self.title = title
+        self.identifier = identifier
+        self.isEnabled = isEnabled
+        self.isSelected = isSelected
+        self.placeholderValue = placeholderValue
+    }
+}
+
+/// Frame (position and size) of a UI element
+public struct ElementFrame: Codable, Sendable {
+    public let x: Double
+    public let y: Double
+    public let width: Double
+    public let height: Double
+
+    public init(x: Double, y: Double, width: Double, height: Double) {
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
     }
 }
 
