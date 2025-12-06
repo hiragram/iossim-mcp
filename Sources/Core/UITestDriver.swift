@@ -151,6 +151,14 @@ public struct UITestDriver: Sendable {
         let destRunnerPath = testProductsDir.appendingPathComponent("SimDriverUITests-Runner.app")
         try FileManager.default.copyItem(at: runnerAppPath, to: destRunnerPath)
 
+        // Create modified .xctestrun file with absolute paths
+        let modifiedXctestrunPath = tempDir.appendingPathComponent("SimDriverUITests.xctestrun")
+        try createModifiedXctestrun(
+            from: xctestrunPath,
+            to: modifiedXctestrunPath,
+            testRoot: tempDir.path
+        )
+
         // Write script to temp file
         let scriptPath = tempDir.appendingPathComponent("script.json")
         let resultPath = tempDir.appendingPathComponent("result.json")
@@ -164,14 +172,13 @@ public struct UITestDriver: Sendable {
             try? FileManager.default.removeItem(at: tempDir)
         }
 
-        // Run xcodebuild test-without-building with testProductsPath
+        // Run xcodebuild test-without-building
         let result = try await processRunner.run(
             executable: "/usr/bin/xcrun",
             arguments: [
                 "xcodebuild",
                 "test-without-building",
-                "-xctestrun", xctestrunPath.path,
-                "-testProductsPath", tempDir.path,
+                "-xctestrun", modifiedXctestrunPath.path,
                 "-destination", "platform=iOS Simulator,id=\(simulatorUdid)",
                 "-only-testing:SimDriverUITests/DriverTests/testScript"
             ],
@@ -193,5 +200,12 @@ public struct UITestDriver: Sendable {
         } else {
             return UITestResult(success: false, results: [], error: result.stderr)
         }
+    }
+
+    /// Creates a modified .xctestrun file with __TESTROOT__ replaced by actual path
+    private func createModifiedXctestrun(from source: URL, to destination: URL, testRoot: String) throws {
+        var content = try String(contentsOf: source, encoding: .utf8)
+        content = content.replacingOccurrences(of: "__TESTROOT__", with: testRoot)
+        try content.write(to: destination, atomically: true, encoding: .utf8)
     }
 }
