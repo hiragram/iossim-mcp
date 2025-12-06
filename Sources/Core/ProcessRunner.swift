@@ -18,6 +18,7 @@ public struct ProcessResult: Sendable {
 /// Protocol for running external processes (allows mocking in tests)
 public protocol ProcessRunner: Sendable {
     func run(executable: String, arguments: [String]) async throws -> ProcessResult
+    func run(executable: String, arguments: [String], environment: [String: String]) async throws -> ProcessResult
 }
 
 /// Default implementation using Foundation.Process
@@ -25,9 +26,20 @@ public struct DefaultProcessRunner: ProcessRunner {
     public init() {}
 
     public func run(executable: String, arguments: [String]) async throws -> ProcessResult {
+        try await run(executable: executable, arguments: arguments, environment: [:])
+    }
+
+    public func run(executable: String, arguments: [String], environment: [String: String]) async throws -> ProcessResult {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
+
+        // Merge custom environment with current process environment
+        var env = ProcessInfo.processInfo.environment
+        for (key, value) in environment {
+            env[key] = value
+        }
+        process.environment = env
 
         let stdoutPipe = Pipe()
         let stderrPipe = Pipe()
@@ -54,12 +66,16 @@ public struct DefaultProcessRunner: ProcessRunner {
 /// Mock process runner for testing
 public final class MockProcessRunner: ProcessRunner, @unchecked Sendable {
     public var results: [String: ProcessResult] = [:]
-    public var callHistory: [(executable: String, arguments: [String])] = []
+    public var callHistory: [(executable: String, arguments: [String], environment: [String: String])] = []
 
     public init() {}
 
     public func run(executable: String, arguments: [String]) async throws -> ProcessResult {
-        callHistory.append((executable, arguments))
+        try await run(executable: executable, arguments: arguments, environment: [:])
+    }
+
+    public func run(executable: String, arguments: [String], environment: [String: String]) async throws -> ProcessResult {
+        callHistory.append((executable, arguments, environment))
 
         let key = "\(executable) \(arguments.joined(separator: " "))"
         if let result = results[key] {

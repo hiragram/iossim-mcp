@@ -139,12 +139,21 @@ public struct UITestDriver: Sendable {
         simulatorUdid: String,
         timeout: TimeInterval = 300
     ) async throws -> UITestResult {
-        // Write script to temp file
+        // Create temporary directory structure that matches .xctestrun expectations
         let sessionId = UUID().uuidString
-        let scriptPath = FileManager.default.temporaryDirectory
-            .appendingPathComponent("simdriver-\(sessionId)-script.json")
-        let resultPath = FileManager.default.temporaryDirectory
-            .appendingPathComponent("simdriver-\(sessionId)-result.json")
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("simdriver-\(sessionId)")
+        let testProductsDir = tempDir.appendingPathComponent("Debug-iphonesimulator")
+
+        try FileManager.default.createDirectory(at: testProductsDir, withIntermediateDirectories: true)
+
+        // Copy runner app to expected location
+        let destRunnerPath = testProductsDir.appendingPathComponent("SimDriverUITests-Runner.app")
+        try FileManager.default.copyItem(at: runnerAppPath, to: destRunnerPath)
+
+        // Write script to temp file
+        let scriptPath = tempDir.appendingPathComponent("script.json")
+        let resultPath = tempDir.appendingPathComponent("result.json")
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
@@ -152,19 +161,23 @@ public struct UITestDriver: Sendable {
         try scriptData.write(to: scriptPath)
 
         defer {
-            try? FileManager.default.removeItem(at: scriptPath)
-            try? FileManager.default.removeItem(at: resultPath)
+            try? FileManager.default.removeItem(at: tempDir)
         }
 
-        // Run xcodebuild test-without-building
+        // Run xcodebuild test-without-building with testProductsPath
         let result = try await processRunner.run(
             executable: "/usr/bin/xcrun",
             arguments: [
                 "xcodebuild",
                 "test-without-building",
                 "-xctestrun", xctestrunPath.path,
+                "-testProductsPath", tempDir.path,
                 "-destination", "platform=iOS Simulator,id=\(simulatorUdid)",
                 "-only-testing:SimDriverUITests/DriverTests/testScript"
+            ],
+            environment: [
+                "UI_TEST_SCRIPT_PATH": scriptPath.path,
+                "UI_TEST_RESULT_PATH": resultPath.path
             ]
         )
 
