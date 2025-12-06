@@ -171,9 +171,18 @@ public struct SimulatorController: Sendable {
         return RecordingSession(process: process, outputPath: outputPath)
     }
 
-    public enum SimulatorError: Error, Sendable {
+    public enum SimulatorError: Error, Sendable, LocalizedError {
         case commandFailed(String)
         case noBootedSimulator
+
+        public var errorDescription: String? {
+            switch self {
+            case .commandFailed(let stderr):
+                return "Simulator command failed: \(stderr)"
+            case .noBootedSimulator:
+                return "No booted simulator found"
+            }
+        }
     }
 }
 
