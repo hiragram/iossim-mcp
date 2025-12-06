@@ -16,6 +16,10 @@ let package = Package(
             dependencies: [
                 "Core",
                 .product(name: "MCP", package: "swift-sdk")
+            ],
+            resources: [
+                .copy("Resources/SimDriverUITests-Runner.app"),
+                .copy("Resources/SimDriverUITests_SimDriverUITests_iphonesimulator26.0-arm64.xctestrun")
             ]
         ),
         .target(
