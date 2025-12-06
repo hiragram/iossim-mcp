@@ -367,6 +367,7 @@ public struct UITestDriver: Sendable {
         }
 
         // Run xcodebuild test-without-building
+        let derivedDataPath = tempDir.appendingPathComponent("DerivedData")
         let result = try await processRunner.run(
             executable: "/usr/bin/xcrun",
             arguments: [
@@ -374,6 +375,7 @@ public struct UITestDriver: Sendable {
                 "test-without-building",
                 "-xctestrun", modifiedXctestrunPath.path,
                 "-destination", "platform=iOS Simulator,id=\(simulatorUdid)",
+                "-derivedDataPath", derivedDataPath.path,
                 "-only-testing:SimDriverUITests/DriverTests/testScript"
             ]
         )
