@@ -300,7 +300,7 @@ public struct UITestDriver: Sendable {
     public func execute(
         script: UITestScript,
         simulatorUdid: String,
-        timeout: TimeInterval = 300
+        timeout: TimeInterval = 120
     ) async throws -> UITestResult {
         // Create temporary directory structure that matches .xctestrun expectations
         let sessionId = UUID().uuidString
@@ -366,7 +366,9 @@ public struct UITestDriver: Sendable {
                 "-destination", "platform=iOS Simulator,id=\(simulatorUdid)",
                 "-derivedDataPath", derivedDataPath.path,
                 "-only-testing:SimDriverUITests/DriverTests/testScript"
-            ]
+            ],
+            environment: [:],
+            timeout: timeout
         )
 
         // Read result if available
