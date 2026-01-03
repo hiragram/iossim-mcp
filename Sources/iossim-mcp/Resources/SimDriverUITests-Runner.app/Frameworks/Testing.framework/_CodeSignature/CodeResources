@@ -6,7 +6,7 @@
 	<dict>
 		<key>Info.plist</key>
 		<data>
-		lxB5oLSwSvqYXv+kdciJ2r2Z/vk=
+		eZpAQaiTkNZWz9+gxTnLRi6PkVU=
 		</data>
 		<key>Modules/Testing.swiftcrossimport/Foundation.swiftoverlay</key>
 		<data>
@@ -14,23 +14,23 @@
 		</data>
 		<key>Modules/Testing.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		FJgnhzgKiX5lquI3u6PYvEUA1gk=
+		jkkdevzq1AoDEhe9ZgeBRMsSH24=
 		</data>
 		<key>Modules/Testing.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<data>
-		hmssl+LbRFbq+l15pJrsY8QIwjA=
+		Tro3RiHDjWTIo3qeJYyg6MkelJQ=
 		</data>
 		<key>Modules/Testing.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		T5KCwCY0ClcKPkpDLsgIpWtncVU=
+		PG47f6/H0CjAXjiphYvXhZzQQAU=
 		</data>
 		<key>Modules/Testing.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
 		<data>
-		vlvfqNEcW76pCg0WUmpNHb1ogAI=
+		S6nRJCAo0BixcESw0JOmPDnif00=
 		</data>
 		<key>version.plist</key>
 		<data>
-		UKZHpwJYM1oHWth3RENO38S/hAk=
+		TICCZvqd0Ik3UHgNuzUc70lA4nU=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -46,35 +46,35 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			jD9DfdV3UfXNyZgwMq6gZb3bD7WzxfD1zB6WwK/Toxs=
+			S4nBiBRGx8eC0+XZfu4FwtubAcxaLM4ZqJWIh76HQXA=
 			</data>
 		</dict>
 		<key>Modules/Testing.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			u7INua8w8TKpND0tBvHsTE2rNCXqyL80iZYNh9jEjIo=
+			IDz0TQofWE/xI+YTCE+Zw/FMVwcprkZU9DUhwYE7O90=
 			</data>
 		</dict>
 		<key>Modules/Testing.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			A4zfGU0RRcwKPRkRrFAbitDtCyIVvtv9c0JYEHYXD9s=
+			M7YWda1ei3uiAOj41c0bHk6sqrMmCvvNl1ZoJOhYBbQ=
 			</data>
 		</dict>
 		<key>Modules/Testing.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			0xDtFiKqRf8bI9+m3Ia6Ohd2Bcb0xbgRO20lr/6DcXQ=
+			ALQS4922dFA+zEuxUoIrw91FqXiC5M4ZS3sRERuC+5Q=
 			</data>
 		</dict>
 		<key>version.plist</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			my0P7TCuxHFpQDCTUZvZvZe27VSXLxkFex01dT35YeU=
+			ikzu4PrteJ/oKcoNsUv/2OSj+XNrI8JeD3Lk63Hmrpc=
 			</data>
 		</dict>
 	</dict>
