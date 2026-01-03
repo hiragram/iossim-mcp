@@ -825,8 +825,37 @@ struct IOSSimMCP {
                 let recordVideo = params.arguments?["recordVideo"]?.boolValue ?? false
 
                 // Parse actions from JSON
-                let actionsData = try JSONEncoder().encode(actionsValue)
-                let actions = try JSONDecoder().decode([UITestAction].self, from: actionsData)
+                let actionsData: Data
+                do {
+                    actionsData = try JSONEncoder().encode(actionsValue)
+                } catch {
+                    return CallTool.Result(content: [.text("Error encoding actions to JSON: \(error)")], isError: true)
+                }
+
+                let actions: [UITestAction]
+                do {
+                    actions = try JSONDecoder().decode([UITestAction].self, from: actionsData)
+                } catch let decodingError as DecodingError {
+                    let errorMessage: String
+                    switch decodingError {
+                    case .keyNotFound(let key, let context):
+                        errorMessage = "Missing required field '\(key.stringValue)' at path: \(context.codingPath.map { $0.stringValue }.joined(separator: ".")). \(context.debugDescription)"
+                    case .typeMismatch(let type, let context):
+                        errorMessage = "Type mismatch for '\(type)' at path: \(context.codingPath.map { $0.stringValue }.joined(separator: ".")). \(context.debugDescription)"
+                    case .valueNotFound(let type, let context):
+                        errorMessage = "Value not found for '\(type)' at path: \(context.codingPath.map { $0.stringValue }.joined(separator: ".")). \(context.debugDescription)"
+                    case .dataCorrupted(let context):
+                        errorMessage = "Data corrupted at path: \(context.codingPath.map { $0.stringValue }.joined(separator: ".")). \(context.debugDescription)"
+                    @unknown default:
+                        errorMessage = "Unknown decoding error: \(decodingError)"
+                    }
+                    // Also include the raw JSON for debugging
+                    let rawJson = String(data: actionsData, encoding: .utf8) ?? "<unable to decode>"
+                    return CallTool.Result(content: [.text("Error decoding actions: \(errorMessage)\n\nRaw JSON received:\n\(rawJson)")], isError: true)
+                } catch {
+                    let rawJson = String(data: actionsData, encoding: .utf8) ?? "<unable to decode>"
+                    return CallTool.Result(content: [.text("Error decoding actions: \(error)\n\nRaw JSON received:\n\(rawJson)")], isError: true)
+                }
 
                 let driver = UITestDriver(
                     xctestrunPath: xctestrunPath,
