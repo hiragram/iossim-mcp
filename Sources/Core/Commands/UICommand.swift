@@ -5,12 +5,14 @@ public enum ElementTarget: Codable, Equatable, Sendable {
     case identifier(String)
     case label(String)
     case coordinate(x: Int, y: Int)
+    case elementType(type: String, index: Int)
 
     private enum CodingKeys: String, CodingKey {
         case type
         case value
         case x
         case y
+        case index
     }
 
     public init(from decoder: Decoder) throws {
@@ -28,6 +30,10 @@ public enum ElementTarget: Codable, Equatable, Sendable {
             let x = try container.decode(Int.self, forKey: .x)
             let y = try container.decode(Int.self, forKey: .y)
             self = .coordinate(x: x, y: y)
+        case "elementType":
+            let value = try container.decode(String.self, forKey: .value)
+            let index = try container.decodeIfPresent(Int.self, forKey: .index) ?? 0
+            self = .elementType(type: value, index: index)
         default:
             throw DecodingError.dataCorruptedError(
                 forKey: .type,
@@ -51,6 +57,10 @@ public enum ElementTarget: Codable, Equatable, Sendable {
             try container.encode("coordinate", forKey: .type)
             try container.encode(x, forKey: .x)
             try container.encode(y, forKey: .y)
+        case .elementType(let type, let index):
+            try container.encode("elementType", forKey: .type)
+            try container.encode(type, forKey: .value)
+            try container.encode(index, forKey: .index)
         }
     }
 }

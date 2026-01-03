@@ -125,12 +125,14 @@ struct ElementTarget: Codable {
         case identifier
         case label
         case coordinate
+        case elementType
     }
 
     let type: TargetType
     let value: String?
     let x: Int?
     let y: Int?
+    let index: Int?
 
     func findElement(in app: XCUIApplication) -> XCUIElement? {
         switch type {
@@ -142,6 +144,12 @@ struct ElementTarget: Codable {
             return app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", value)).firstMatch
         case .coordinate:
             return nil // Coordinates are handled differently
+        case .elementType:
+            guard let value = value, let xcuiElementType = xcuiElementType(from: value) else { return nil }
+            let elements = app.descendants(matching: xcuiElementType)
+            let idx = index ?? 0
+            guard elements.count > idx else { return nil }
+            return elements.element(boundBy: idx)
         }
     }
 
@@ -149,6 +157,53 @@ struct ElementTarget: Codable {
         guard type == .coordinate, let x = x, let y = y else { return nil }
         let normalized = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
         return normalized.withOffset(CGVector(dx: x, dy: y))
+    }
+
+    private func xcuiElementType(from string: String) -> XCUIElement.ElementType? {
+        switch string.lowercased() {
+        case "textfield", "text_field":
+            return .textField
+        case "securetextfield", "secure_text_field":
+            return .secureTextField
+        case "button":
+            return .button
+        case "statictext", "static_text", "label":
+            return .staticText
+        case "image":
+            return .image
+        case "cell":
+            return .cell
+        case "table":
+            return .table
+        case "collectionview", "collection_view":
+            return .collectionView
+        case "scrollview", "scroll_view":
+            return .scrollView
+        case "switch":
+            return .switch
+        case "slider":
+            return .slider
+        case "picker":
+            return .picker
+        case "textview", "text_view":
+            return .textView
+        case "alert":
+            return .alert
+        case "sheet":
+            return .sheet
+        case "navigationbar", "navigation_bar":
+            return .navigationBar
+        case "toolbar":
+            return .toolbar
+        case "tabbar", "tab_bar":
+            return .tabBar
+        case "window":
+            return .window
+        case "any":
+            return .any
+        default:
+            return nil
+        }
     }
 }
 
