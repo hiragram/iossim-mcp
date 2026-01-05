@@ -158,14 +158,28 @@ struct ElementTarget: Codable {
         guard let x = x, let y = y else { return nil }
 
         let appFrame = app.frame
-        print("DEBUG: App frame = \(appFrame)")
-        print("DEBUG: Input type = \(type), x = \(x), y = \(y)")
+
+        // Log to file for debugging
+        let logPath = "/tmp/iossim-driver-debug.log"
+        let timestamp = Date().timeIntervalSince1970
+        var logMessage = "\n[\(timestamp)] getCoordinate\n"
+        logMessage += "  Frame: \(appFrame)\n"
+        logMessage += "  Type: \(type), x: \(x), y: \(y)\n"
 
         if type == .coordinate {
             // For coordinate type, x and y are pixel values
             let origin = app.coordinate(withNormalizedOffset: .zero)
             let result = origin.withOffset(CGVector(dx: x, dy: y))
-            print("DEBUG: Coordinate mode - input (\(x), \(y)), screen point = \(result.screenPoint)")
+            logMessage += "  Coord mode - screen: \(result.screenPoint)\n"
+            if let data = logMessage.data(using: .utf8) {
+                if let handle = FileHandle(forWritingAtPath: logPath) {
+                    handle.seekToEndOfFile()
+                    handle.write(data)
+                    handle.closeFile()
+                } else {
+                    try? data.write(to: URL(fileURLWithPath: logPath))
+                }
+            }
             return result
         } else if type == .normalized {
             // For normalized type, x and y are in 0-1 range relative to screen
@@ -174,7 +188,16 @@ struct ElementTarget: Codable {
             let pixelY = y * appFrame.height
             let origin = app.coordinate(withNormalizedOffset: .zero)
             let result = origin.withOffset(CGVector(dx: pixelX, dy: pixelY))
-            print("DEBUG: Normalized mode - input (\(x), \(y)), pixels (\(pixelX), \(pixelY)), screen point = \(result.screenPoint)")
+            logMessage += "  Norm mode - px: (\(pixelX), \(pixelY)), screen: \(result.screenPoint)\n"
+            if let data = logMessage.data(using: .utf8) {
+                if let handle = FileHandle(forWritingAtPath: logPath) {
+                    handle.seekToEndOfFile()
+                    handle.write(data)
+                    handle.closeFile()
+                } else {
+                    try? data.write(to: URL(fileURLWithPath: logPath))
+                }
+            }
             return result
         }
         return nil
