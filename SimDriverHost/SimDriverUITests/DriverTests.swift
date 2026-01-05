@@ -143,7 +143,7 @@ struct ElementTarget: Codable {
         case .label:
             guard let value = value else { return nil }
             return app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", value)).firstMatch
-        case .coordinate:
+        case .coordinate, .normalized:
             return nil // Coordinates are handled differently
         case .elementType:
             guard let value = value, let xcuiElementType = xcuiElementType(from: value) else { return nil }
