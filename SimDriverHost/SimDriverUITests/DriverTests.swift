@@ -125,13 +125,14 @@ struct ElementTarget: Codable {
         case identifier
         case label
         case coordinate
+        case normalized
         case elementType
     }
 
     let type: TargetType
     let value: String?
-    let x: Int?
-    let y: Int?
+    let x: Double?
+    let y: Double?
     let index: Int?
 
     func findElement(in app: XCUIApplication) -> XCUIElement? {
@@ -154,9 +155,27 @@ struct ElementTarget: Codable {
     }
 
     func getCoordinate(in app: XCUIApplication) -> XCUICoordinate? {
-        guard type == .coordinate, let x = x, let y = y else { return nil }
+        guard let x = x, let y = y else { return nil }
+
         let normalized = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
-        return normalized.withOffset(CGVector(dx: x, dy: y))
+
+        if type == .coordinate {
+            // For coordinate type, x and y are pixel values
+            return normalized.withOffset(CGVector(dx: x, dy: y))
+        } else if type == .normalized {
+            // For normalized type, x and y are 0-1 range
+            // Get screen dimensions
+            let screenFrame = app.frame
+            let screenWidth = screenFrame.size.width
+            let screenHeight = screenFrame.size.height
+
+            // Convert normalized coordinates (0-1) to pixel coordinates
+            let pixelX = x * screenWidth
+            let pixelY = y * screenHeight
+
+            return normalized.withOffset(CGVector(dx: pixelX, dy: pixelY))
+        }
+        return nil
     }
 
     private func xcuiElementType(from string: String) -> XCUIElement.ElementType? {

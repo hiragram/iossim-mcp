@@ -4,7 +4,8 @@ import Foundation
 public enum ElementTarget: Codable, Equatable, Sendable {
     case identifier(String)
     case label(String)
-    case coordinate(x: Int, y: Int)
+    case coordinate(x: Double, y: Double)
+    case normalized(x: Double, y: Double)
     case elementType(type: String, index: Int)
 
     private enum CodingKeys: String, CodingKey {
@@ -27,9 +28,13 @@ public enum ElementTarget: Codable, Equatable, Sendable {
             let value = try container.decode(String.self, forKey: .value)
             self = .label(value)
         case "coordinate":
-            let x = try container.decode(Int.self, forKey: .x)
-            let y = try container.decode(Int.self, forKey: .y)
+            let x = try container.decode(Double.self, forKey: .x)
+            let y = try container.decode(Double.self, forKey: .y)
             self = .coordinate(x: x, y: y)
+        case "normalized":
+            let x = try container.decode(Double.self, forKey: .x)
+            let y = try container.decode(Double.self, forKey: .y)
+            self = .normalized(x: x, y: y)
         case "elementType":
             let value = try container.decode(String.self, forKey: .value)
             let index = try container.decodeIfPresent(Int.self, forKey: .index) ?? 0
@@ -55,6 +60,10 @@ public enum ElementTarget: Codable, Equatable, Sendable {
             try container.encode(value, forKey: .value)
         case .coordinate(let x, let y):
             try container.encode("coordinate", forKey: .type)
+            try container.encode(x, forKey: .x)
+            try container.encode(y, forKey: .y)
+        case .normalized(let x, let y):
+            try container.encode("normalized", forKey: .type)
             try container.encode(x, forKey: .x)
             try container.encode(y, forKey: .y)
         case .elementType(let type, let index):

@@ -207,7 +207,7 @@ struct IOSSimMCP {
                             ]),
                             "actions": .object([
                                 "type": .string("array"),
-                                "description": .string("Array of actions to perform. Supported types: tap, doubleTap, typeText, swipe, longPress, pinch, rotate, drag, scrollToElement, clearText, shake, waitForElement, assertExists, getElementValue, getElementProperties, getElementFrame. Each action requires 'type' and a 'target' object with 'type' (identifier/label/coordinate) and 'value'.")
+                                "description": .string("Array of actions to perform. Supported types: tap, doubleTap, typeText, swipe, longPress, pinch, rotate, drag, scrollToElement, clearText, shake, waitForElement, assertExists, getElementValue, getElementProperties, getElementFrame. Each action requires 'type' and a 'target' object with 'type' (identifier/label/coordinate/normalized) and 'value'.")
                             ]),
                             "simulatorUdid": .object([
                                 "type": .string("string"),
@@ -1045,7 +1045,7 @@ struct IOSSimMCP {
                     fromTarget = .identifier(identifier)
                 } else if let label = params.arguments?["fromLabel"]?.stringValue {
                     fromTarget = .label(label)
-                } else if let x = params.arguments?["fromX"]?.intValue, let y = params.arguments?["fromY"]?.intValue {
+                } else if let x = params.arguments?["fromX"]?.doubleValue, let y = params.arguments?["fromY"]?.doubleValue {
                     fromTarget = .coordinate(x: x, y: y)
                 } else {
                     return CallTool.Result(content: [.text("Error: Source (fromIdentifier, fromLabel, or fromX/fromY) is required")], isError: true)
@@ -1056,7 +1056,7 @@ struct IOSSimMCP {
                     toTarget = .identifier(identifier)
                 } else if let label = params.arguments?["toLabel"]?.stringValue {
                     toTarget = .label(label)
-                } else if let x = params.arguments?["toX"]?.intValue, let y = params.arguments?["toY"]?.intValue {
+                } else if let x = params.arguments?["toX"]?.doubleValue, let y = params.arguments?["toY"]?.doubleValue {
                     toTarget = .coordinate(x: x, y: y)
                 } else {
                     return CallTool.Result(content: [.text("Error: Destination (toIdentifier, toLabel, or toX/toY) is required")], isError: true)
