@@ -168,9 +168,13 @@ struct ElementTarget: Codable {
             print("DEBUG: Coordinate mode - input (\(x), \(y)), screen point = \(result.screenPoint)")
             return result
         } else if type == .normalized {
-            // For normalized type, x and y are in 0-1 range
-            let result = app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y))
-            print("DEBUG: Normalized mode - input (\(x), \(y)), screen point = \(result.screenPoint)")
+            // For normalized type, x and y are in 0-1 range relative to screen
+            // Convert to pixel coordinates using app frame size
+            let pixelX = x * appFrame.width
+            let pixelY = y * appFrame.height
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let result = origin.withOffset(CGVector(dx: pixelX, dy: pixelY))
+            print("DEBUG: Normalized mode - input (\(x), \(y)), pixels (\(pixelX), \(pixelY)), screen point = \(result.screenPoint)")
             return result
         }
         return nil
