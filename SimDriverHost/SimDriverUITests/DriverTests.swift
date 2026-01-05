@@ -157,14 +157,22 @@ struct ElementTarget: Codable {
     func getCoordinate(in app: XCUIApplication) -> XCUICoordinate? {
         guard let x = x, let y = y else { return nil }
 
+        let appFrame = app.frame
+        print("DEBUG: App frame = \(appFrame)")
+        print("DEBUG: Input type = \(type), x = \(x), y = \(y)")
+
         if type == .coordinate {
             // For coordinate type, x and y are pixel values
             let origin = app.coordinate(withNormalizedOffset: .zero)
-            return origin.withOffset(CGVector(dx: x, dy: y))
+            let result = origin.withOffset(CGVector(dx: x, dy: y))
+            print("DEBUG: Coordinate mode - screen point = \(result.screenPoint)")
+            return result
         } else if type == .normalized {
             // For normalized type, x and y are in 0-1 range
             // Use withNormalizedOffset which expects values from 0.0 to 1.0
-            return app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y))
+            let result = app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y))
+            print("DEBUG: Normalized mode - screen point = \(result.screenPoint)")
+            return result
         }
         return nil
     }
