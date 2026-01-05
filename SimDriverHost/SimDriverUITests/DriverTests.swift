@@ -159,11 +159,11 @@ struct ElementTarget: Codable {
 
         if type == .coordinate {
             // For coordinate type, x and y are pixel values
-            let normalized = app.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0))
-            return normalized.withOffset(CGVector(dx: x, dy: y))
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            return origin.withOffset(CGVector(dx: x, dy: y))
         } else if type == .normalized {
-            // For normalized type, x and y are already in 0-1 range
-            // Use withNormalizedOffset directly
+            // For normalized type, x and y are in 0-1 range
+            // Use withNormalizedOffset which expects values from 0.0 to 1.0
             return app.coordinate(withNormalizedOffset: CGVector(dx: x, dy: y))
         }
         return nil
