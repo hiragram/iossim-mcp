@@ -162,14 +162,10 @@ struct ElementTarget: Codable {
         print("DEBUG: Input type = \(type), x = \(x), y = \(y)")
 
         if type == .coordinate {
-            // For coordinate type, x and y are pixel values from screen origin
-            // App frame might not start at (0,0) due to status bar/notch
-            // Adjust coordinates relative to app frame origin
-            let adjustedX = x - appFrame.origin.x
-            let adjustedY = y - appFrame.origin.y
+            // For coordinate type, x and y are pixel values
             let origin = app.coordinate(withNormalizedOffset: .zero)
-            let result = origin.withOffset(CGVector(dx: adjustedX, dy: adjustedY))
-            print("DEBUG: Coordinate mode - input (\(x), \(y)), adjusted (\(adjustedX), \(adjustedY)), screen point = \(result.screenPoint)")
+            let result = origin.withOffset(CGVector(dx: x, dy: y))
+            print("DEBUG: Coordinate mode - input (\(x), \(y)), screen point = \(result.screenPoint)")
             return result
         } else if type == .normalized {
             // For normalized type, x and y are in 0-1 range
